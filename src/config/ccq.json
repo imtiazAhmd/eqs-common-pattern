@@ -1,0 +1,386 @@
+{
+  "title": "Check if your client qualifies for legal aid",
+  "description": "Complete application for legal aid assistance",
+  "steps": [
+    {
+      "id": "personal_info",
+      "title": "Personal Information", 
+      "description": "Tell us about yourself",
+      "fields": [
+        {
+          "question": "What is your full name?",
+          "type": "text",
+          "name": "full_name",
+          "required": true,
+          "hint": "Enter your full legal name as it appears on official documents"
+        },
+        {
+          "question": "What is your date of birth?",
+          "type": "date",
+          "name": "date_of_birth",
+          "required": true,
+          "hint": "For example, 27 3 1980"
+        },
+        {
+          "question": "Are you applying on behalf of someone else?",
+          "type": "radio",
+          "name": "applying_for_other",
+          "required": true,
+          "available_options": ["Yes", "No"],
+          "hint": "Choose Yes if you are a legal representative or guardian"
+        }
+      ],
+      "conditionalNavigation": {
+        "applying_for_other": {
+          "Yes": "representative_details",
+          "No": "contact_details"
+        }
+      }
+    },
+    {
+      "id": "representative_details",
+      "title": "Representative Details",
+      "description": "Tell us about the person you're representing",
+      "fields": [
+        {
+          "question": "What is the full name of the person you're representing?",
+          "type": "text",
+          "name": "client_full_name",
+          "required": true,
+          "hint": "Enter the client's full legal name"
+        },
+        {
+          "question": "What is your relationship to this person?",
+          "type": "select",
+          "name": "relationship_type",
+          "required": true,
+          "available_options": [
+            "Legal Representative/Solicitor",
+            "Parent/Guardian",
+            "Power of Attorney",
+            "Other"
+          ],
+          "hint": "Select your legal relationship to the applicant"
+        },
+        {
+          "question": "Do you have legal authority to act on their behalf?",
+          "type": "radio",
+          "name": "has_legal_authority",
+          "required": true,
+          "available_options": ["Yes", "No"],
+          "hint": "This could be through Power of Attorney, court order, or professional capacity"
+        }
+      ],
+      "conditionalNavigation": {
+        "has_legal_authority": {
+          "Yes": "contact_details",
+          "No": "authority_required"
+        }
+      }
+    },
+    {
+      "id": "authority_required",
+      "title": "Legal Authority Required",
+      "description": "You need proper authorization to continue",
+      "fields": [
+        {
+          "question": "You cannot proceed without proper legal authority",
+          "type": "textarea",
+          "name": "authority_info",
+          "required": false,
+          "hint": "Please obtain the necessary legal documentation before continuing with this application. Contact our office for guidance on the required documents."
+        }
+      ],
+      "isTerminalStep": true
+    },
+    {
+      "id": "contact_details",
+      "title": "Contact Details",
+      "description": "How can we reach you?",
+      "fields": [
+        {
+          "question": "What is your phone number?",
+          "type": "text",
+          "name": "phone_number",
+          "required": true,
+          "hint": "Include area code, for example 020 7946 0234"
+        },
+        {
+          "question": "What is your email address?",
+          "type": "text",
+          "name": "email_address",
+          "required": true,
+          "hint": "We'll use this to contact you about your application"
+        },
+        {
+          "question": "How would you prefer us to contact you?",
+          "type": "radio",
+          "name": "preferred_contact",
+          "required": true,
+          "available_options": ["Email", "Phone", "Post"],
+          "hint": "Choose your preferred method of communication"
+        }
+      ]
+    },
+    {
+      "id": "case_info",
+      "title": "Case Information",
+      "description": "Tell us about your legal matter",
+      "fields": [
+        {
+          "question": "What type of legal matter is this?",
+          "type": "select",
+          "name": "case_type",
+          "required": true,
+          "available_options": [
+            "Family Law",
+            "Housing",
+            "Immigration", 
+            "Welfare Benefits",
+            "Employment",
+            "Debt",
+            "Criminal Law",
+            "Other"
+          ],
+          "hint": "Select the category that best describes your legal issue"
+        },
+        {
+          "question": "Is this matter urgent?",
+          "type": "radio",
+          "name": "urgency_level",
+          "required": true,
+          "available_options": ["Yes - immediate action needed", "No - routine matter"],
+          "hint": "Urgent matters may be prioritized for review"
+        }
+      ],
+      "conditionalNavigation": {
+        "case_type": {
+          "Family Law": "family_law_details",
+          "Housing": "housing_details",
+          "Immigration": "immigration_details",
+          "Criminal Law": "criminal_law_details",
+          "default": "general_case_details"
+        }
+      }
+    },
+    {
+      "id": "family_law_details",
+      "title": "Family Law Details",
+      "description": "Specific information about your family law matter",
+      "fields": [
+        {
+          "question": "What type of family law matter is this?",
+          "type": "checkboxes",
+          "name": "family_law_type",
+          "available_options": [
+            "Divorce/Separation",
+            "Child custody/access",
+            "Child maintenance",
+            "Domestic violence",
+            "Adoption",
+            "Other family matter"
+          ],
+          "hint": "Select all that apply to your situation"
+        },
+        {
+          "question": "Are there children involved?",
+          "type": "radio",
+          "name": "children_involved",
+          "required": true,
+          "available_options": ["Yes", "No"]
+        }
+      ],
+      "conditionalNavigation": {
+        "children_involved": {
+          "Yes": "children_details",
+          "No": "financial_info"
+        }
+      }
+    },
+    {
+      "id": "housing_details",
+      "title": "Housing Law Details", 
+      "description": "Specific information about your housing matter",
+      "fields": [
+        {
+          "question": "What type of housing issue are you facing?",
+          "type": "select",
+          "name": "housing_issue_type",
+          "required": true,
+          "available_options": [
+            "Eviction threat",
+            "Landlord dispute",
+            "Housing conditions",
+            "Rent issues",
+            "Homelessness",
+            "Other housing matter"
+          ]
+        },
+        {
+          "question": "Are you currently facing immediate risk of homelessness?",
+          "type": "radio",
+          "name": "homelessness_risk",
+          "required": true,
+          "available_options": ["Yes - within 7 days", "Yes - within 28 days", "No immediate risk"],
+          "hint": "This helps us prioritize urgent cases"
+        }
+      ]
+    },
+    {
+      "id": "immigration_details",
+      "title": "Immigration Law Details",
+      "description": "Specific information about your immigration matter",
+      "fields": [
+        {
+          "question": "What type of immigration matter is this?",
+          "type": "select",
+          "name": "immigration_issue_type", 
+          "required": true,
+          "available_options": [
+            "Asylum claim",
+            "Visa application",
+            "Appeal/Review",
+            "Deportation threat",
+            "Family reunion",
+            "Other immigration matter"
+          ]
+        },
+        {
+          "question": "Do you have current legal status in the UK?",
+          "type": "radio",
+          "name": "current_legal_status",
+          "required": true,
+          "available_options": ["Yes", "No", "Uncertain"]
+        }
+      ]
+    },
+    {
+      "id": "criminal_law_details",
+      "title": "Criminal Law Details",
+      "description": "Specific information about your criminal law matter",
+      "fields": [
+        {
+          "question": "What type of criminal law matter is this?",
+          "type": "select",
+          "name": "criminal_matter_type",
+          "required": true,
+          "available_options": [
+            "Police station representation",
+            "Court proceedings", 
+            "Appeal",
+            "Post-conviction matters",
+            "Other criminal matter"
+          ]
+        },
+        {
+          "question": "Are you currently in police custody or detained?",
+          "type": "radio", 
+          "name": "currently_detained",
+          "required": true,
+          "available_options": ["Yes", "No"]
+        }
+      ],
+      "conditionalNavigation": {
+        "currently_detained": {
+          "Yes": "urgent_representation",
+          "No": "financial_info"
+        }
+      }
+    },
+    {
+      "id": "urgent_representation",
+      "title": "Urgent Legal Representation",
+      "description": "Immediate assistance required",
+      "fields": [
+        {
+          "question": "This is an urgent matter requiring immediate attention",
+          "type": "textarea",
+          "name": "urgent_details",
+          "required": true,
+          "hint": "Please call our emergency line immediately: 0800 123 456. Provide details of your current situation and location."
+        }
+      ],
+      "isUrgentStep": true
+    },
+    {
+      "id": "children_details",
+      "title": "Children Details",
+      "description": "Information about children involved",
+      "fields": [
+        {
+          "question": "How many children are involved?",
+          "type": "text",
+          "name": "number_of_children",
+          "required": true,
+          "hint": "Enter the number of children affected by this matter"
+        },
+        {
+          "question": "Ages of children",
+          "type": "textarea", 
+          "name": "children_ages",
+          "required": true,
+          "hint": "List the ages of all children involved, separated by commas"
+        }
+      ]
+    },
+    {
+      "id": "general_case_details",
+      "title": "Case Details",
+      "description": "General information about your legal matter",
+      "fields": [
+        {
+          "question": "Briefly describe your legal issue",
+          "type": "textarea",
+          "name": "case_description",
+          "required": true,
+          "hint": "Provide a brief summary of your legal matter (maximum 500 words)"
+        }
+      ]
+    },
+    {
+      "id": "financial_info",
+      "title": "Financial Information",
+      "description": "We need to assess your financial eligibility",
+      "fields": [
+        {
+          "question": "What is your monthly income?",
+          "type": "text",
+          "name": "monthly_income",
+          "required": true,
+          "hint": "Include all sources of income before tax (£)"
+        },
+        {
+          "question": "Do you receive any benefits?",
+          "type": "checkboxes",
+          "name": "benefits_received",
+          "available_options": [
+            "Universal Credit",
+            "Housing Benefit", 
+            "Child Tax Credit",
+            "Working Tax Credit",
+            "Income Support",
+            "Jobseeker's Allowance",
+            "Employment and Support Allowance",
+            "None of the above"
+          ],
+          "hint": "Select all benefits you currently receive"
+        }
+      ]
+    },
+    {
+      "id": "declaration",
+      "title": "Declaration",
+      "description": "Please confirm your application details",
+      "fields": [
+        {
+          "question": "I declare that the information I have provided is true and complete",
+          "type": "checkboxes",
+          "name": "declaration_agreement",
+          "required": true,
+          "available_options": ["I agree to this declaration"],
+          "hint": "You must agree to this declaration to submit your application"
+        }
+      ]
+    }
+  ]
+}

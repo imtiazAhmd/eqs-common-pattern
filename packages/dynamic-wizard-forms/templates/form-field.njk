@@ -1,0 +1,177 @@
+{% from "govuk/components/input/macro.njk" import govukInput %}
+{% from "govuk/components/textarea/macro.njk" import govukTextarea %}
+{% from "govuk/components/radios/macro.njk" import govukRadios %}
+{% from "govuk/components/checkboxes/macro.njk" import govukCheckboxes %}
+{% from "govuk/components/select/macro.njk" import govukSelect %}
+{% from "govuk/components/date-input/macro.njk" import govukDateInput %}
+
+{% macro renderFormField(field, fieldValue, fieldError, formData) %}
+  {% set fieldName = field.name %}
+
+  {% if field.type === 'text' %}
+    {{ govukInput({
+      label: {
+        text: field.question,
+        classes: "govuk-label--m"
+      },
+      hint: {
+        text: field.hint
+      } if field.hint,
+      id: fieldName,
+      name: fieldName,
+      value: fieldValue,
+      errorMessage: {
+        text: fieldError
+      } if fieldError,
+      classes: "govuk-!-width-two-thirds"
+    }) }}
+
+  {% elif field.type === 'textarea' %}
+    {{ govukTextarea({
+      label: {
+        text: field.question,
+        classes: "govuk-label--m"
+      },
+      hint: {
+        text: field.hint
+      } if field.hint,
+      id: fieldName,
+      name: fieldName,
+      value: fieldValue,
+      errorMessage: {
+        text: fieldError
+      } if fieldError,
+      rows: 5
+    }) }}
+
+  {% elif field.type === 'radio' %}
+    {% set radioItems = [] %}
+    {% for option in field.available_options %}
+      {% set radioItems = radioItems.concat([
+        {
+          value: option,
+          text: option,
+          checked: fieldValue === option
+        }
+      ]) %}
+    {% endfor %}
+
+    {{ govukRadios({
+      name: fieldName,
+      fieldset: {
+        legend: {
+          text: field.question,
+          classes: "govuk-fieldset__legend--m"
+        }
+      },
+      hint: {
+        text: field.hint
+      } if field.hint,
+      items: radioItems,
+      errorMessage: {
+        text: fieldError
+      } if fieldError
+    }) }}
+
+  {% elif field.type === 'checkboxes' %}
+    {% set checkboxItems = [] %}
+    {% for option in field.available_options %}
+      {% set isChecked = fieldValue and(fieldValue.includes(option) if (fieldValue is iterable and fieldValue is not string) 
+        else
+          fieldValue === option
+      ) %}
+      {% set checkboxItems = checkboxItems.concat([
+        {
+          value: option,
+          text: option,
+          checked: isChecked
+        }
+      ]) %}
+    {% endfor %}
+
+    {{ govukCheckboxes({
+      name: fieldName,
+      fieldset: {
+        legend: {
+          text: field.question,
+          classes: "govuk-fieldset__legend--m"
+        }
+      },
+      hint: {
+        text: field.hint
+      } if field.hint,
+      items: checkboxItems,
+      errorMessage: {
+        text: fieldError
+      } if fieldError
+    }) }}
+
+  {% elif field.type === 'select' %}
+    {% set selectItems = [
+      {
+        value: "",
+        text: "Please select"
+      }
+    ] %}
+    {% for option in field.available_options %}
+      {% set selectItems = selectItems.concat([
+        {
+          value: option,
+          text: option,
+          selected: fieldValue === option
+        }
+      ]) %}
+    {% endfor %}
+
+    {{ govukSelect({
+      label: {
+        text: field.question,
+        classes: "govuk-label--m"
+      },
+      hint: {
+        text: field.hint
+      } if field.hint,
+      id: fieldName,
+      name: fieldName,
+      items: selectItems,
+      errorMessage: {
+        text: fieldError
+      } if fieldError
+    }) }}
+
+  {% elif field.type === 'date' %}
+    {{ govukDateInput({
+      fieldset: {
+        legend: {
+          text: field.question,
+          classes: "govuk-fieldset__legend--m"
+        }
+      },
+      hint: {
+        text: field.hint or "For example, 27 3 2007"
+      },
+      id: fieldName,
+      namePrefix: fieldName,
+      errorMessage: {
+        text: fieldError
+      } if fieldError,
+      items: [
+        {
+          classes: "govuk-input--width-2",
+          name: "day",
+          value: formData[fieldName + "_day"]
+        },
+        {
+          classes: "govuk-input--width-2", 
+          name: "month",
+          value: formData[fieldName + "_month"]
+        },
+        {
+          classes: "govuk-input--width-4",
+          name: "year", 
+          value: formData[fieldName + "_year"]
+        }
+      ]
+    }) }}
+  {% endif %}
+{% endmacro %}

@@ -2,6 +2,12 @@ import express from 'express';
 import type { Request, Response, NextFunction } from 'express';
 import { validatePerson } from '#src/middlewares/personSchema.js';
 import { getPerson, postPerson } from '#src/controllers/personController.js';
+import { 
+  getFormsList, 
+  getDynamicForm, 
+  postDynamicForm,
+  getFormSuccess
+} from '#src/controllers/dynamicFormController.js';
 import { exampleApiService } from '#src/services/exampleApiService.js';
 
 // Create a new router
@@ -60,6 +66,12 @@ router.get('/error', function (req: Request, res: Response): void {
 router.get('/change/person', getPerson);
 
 router.post('/change/person', validatePerson(), postPerson);
+
+// Dynamic Forms routes
+router.get('/dynamic-forms', getFormsList);
+router.get('/dynamic-forms/:formId', getDynamicForm);
+router.post('/dynamic-forms/:formId', postDynamicForm);
+router.get('/dynamic-forms/:formId/success', getFormSuccess);
 
 
 export default router;
