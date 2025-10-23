@@ -1,0 +1,95 @@
+{% extends "base.njk" %}
+
+{% block content %}
+  <div class="govuk-width-container">
+    <main class="govuk-main-wrapper" id="main-content" role="main">
+      <div class="govuk-grid-row">
+        <div class="govuk-grid-column-two-thirds">
+          <h1 class="govuk-heading-xl">Conditional Wizard Forms</h1>
+          
+          <p class="govuk-body-l">
+            This demonstration shows how wizard forms can have conditional logic based on user answers.
+          </p>
+
+          <h2 class="govuk-heading-l">Features Demonstrated</h2>
+          
+          <ul class="govuk-list govuk-list--bullet">
+            <li>
+              <strong>Conditional Navigation:</strong> Different answers lead to different next steps
+            </li>
+            <li>
+              <strong>Dynamic Step Routing:</strong> Skip irrelevant sections based on user input
+            </li>
+            <li>
+              <strong>Terminal Steps:</strong> End the wizard early when certain conditions are met
+            </li>
+            <li>
+              <strong>Urgent Steps:</strong> Special handling for time-sensitive matters
+            </li>
+            <li>
+              <strong>Branch-specific Questions:</strong> Show different questions based on case type
+            </li>
+          </ul>
+
+          <h2 class="govuk-heading-l">Example Flow</h2>
+          
+          <div class="govuk-inset-text">
+            <p>Try the form with these scenarios:</p>
+            <ul class="govuk-list govuk-list--number">
+              <li>Answer "Yes" to applying on behalf of someone else → Go to representative details</li>
+              <li>Select "Criminal Law" as case type → Get criminal law specific questions</li>
+              <li>Answer "Yes" to currently detained → Get urgent representation step</li>
+              <li>Answer "No" to legal authority → Get terminal step (cannot proceed)</li>
+            </ul>
+          </div>
+
+          <div class="govuk-button-group">
+            <a href="/dynamic-forms/legal-aid-application" role="button" draggable="false" class="govuk-button govuk-button--start" data-module="govuk-button">
+              Try the conditional wizard
+              <svg class="govuk-button__start-icon" xmlns="http://www.w3.org/2000/svg" width="17.5" height="19" viewBox="0 0 33 40" aria-hidden="true" focusable="false">
+                <path fill="currentColor" d="M0 0h13l20 20-20 20H0l20-20z"/>
+              </svg>
+            </a>
+          </div>
+
+          <h2 class="govuk-heading-l">Technical Implementation</h2>
+          
+          <details class="govuk-details" data-module="govuk-details">
+            <summary class="govuk-details__summary">
+              <span class="govuk-details__summary-text">
+                View implementation details
+              </span>
+            </summary>
+            <div class="govuk-details__text">
+              <h3 class="govuk-heading-m">Form Configuration Structure</h3>
+              <pre class="govuk-body-s"><code>{
+  "id": "step_id",
+  "title": "Step Title",
+  "fields": [...],
+  "conditionalNavigation": {
+    "field_name": {
+      "Yes": "target_step_id",
+      "No": "different_step_id",
+      "default": "fallback_step_id"
+    }
+  },
+  "isTerminalStep": true,
+  "isUrgentStep": true
+}</code></pre>
+              
+              <h3 class="govuk-heading-m">Key Features</h3>
+              <ul class="govuk-list govuk-list--bullet">
+                <li><strong>Step IDs:</strong> Each step has a unique identifier for routing</li>
+                <li><strong>Conditional Navigation:</strong> Maps field values to next step IDs</li>
+                <li><strong>Terminal Steps:</strong> Steps that end the wizard flow</li>
+                <li><strong>Urgent Steps:</strong> Steps requiring immediate attention</li>
+                <li><strong>Fallback Routing:</strong> Default routes when no condition matches</li>
+              </ul>
+            </div>
+          </details>
+
+        </div>
+      </div>
+    </main>
+  </div>
+{% endblock %}

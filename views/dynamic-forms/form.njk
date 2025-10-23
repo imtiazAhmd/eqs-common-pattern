@@ -1,0 +1,229 @@
+{% extends "base.njk" %}
+
+{% from "govuk/components/input/macro.njk" import govukInput %}
+{% from "govuk/components/textarea/macro.njk" import govukTextarea %}
+{% from "govuk/components/date-input/macro.njk" import govukDateInput %}
+{% from "govuk/components/radios/macro.njk" import govukRadios %}
+{% from "govuk/components/select/macro.njk" import govukSelect %}
+{% from "govuk/components/checkboxes/macro.njk" import govukCheckboxes %}
+{% from "govuk/components/button/macro.njk" import govukButton %}
+{% from "govuk/components/error-summary/macro.njk" import govukErrorSummary %}
+
+{% block pageTitle %}
+  {{ formTitle }} - {{ config.SERVICE_NAME }}
+{% endblock %}
+
+{% block content %}
+  <div class="govuk-grid-row">
+    <div class="govuk-grid-column-two-thirds">
+
+      {% if error and error.errorSummaryList and error.errorSummaryList.length > 0 %}
+        {{ govukErrorSummary({
+          titleText: "There is a problem",
+          errorList: error.errorSummaryList
+        }) }}
+      {% endif %}
+
+      <h1 class="govuk-heading-xl">{{ formTitle }}</h1>
+
+      {% if isCustomForm %}
+        <div class="govuk-inset-text">
+          <p class="govuk-body">This is a dynamically generated form based on your JSON configuration.</p>
+        </div>
+      {% endif %}
+
+      <form action="/dynamic-forms/{{ formId }}" method="post" novalidate>
+
+        {% for field in formConfig %}
+
+          {% if field.type == "text" %}
+            {{ govukInput({
+              id: field.name,
+              name: field.name,
+              type: "text",
+              label: {
+                text: field.question,
+                classes: "govuk-label--m"
+              },
+              hint: {
+                text: field.hint
+              } if field.hint,
+              value: formData[field.name] if formData else "",
+              errorMessage: {
+                text: error.inputErrors[field.name]
+              } if error and error.inputErrors and error.inputErrors[field.name]
+            }) }}
+
+          {% elif field.type == "textarea" %}
+            {{ govukTextarea({
+              id: field.name,
+              name: field.name,
+              label: {
+                text: field.question,
+                classes: "govuk-label--m"
+              },
+              hint: {
+                text: field.hint
+              } if field.hint,
+              value: formData[field.name] if formData else "",
+              rows: 4,
+              errorMessage: {
+                text: error.inputErrors[field.name]
+              } if error and error.inputErrors and error.inputErrors[field.name]
+            }) }}
+
+          {% elif field.type == "radio" %}
+            {% set radioItems = [] %}
+            {% for option in field.available_options %}
+              {% set optionValue = option.value if option.value else
+                option %}
+              {% set optionText = option.text if option.text else
+                option %}
+              {% set radioItems = (radioItems.push({
+                value: optionValue,
+                text: optionText,
+                checked: (formData[field.name] == optionValue)if formData and formData[field.name]
+              }), radioItems) %}
+            {% endfor %}
+
+            {{ govukRadios({
+              name: field.name,
+              fieldset: {
+                legend: {
+                  text: field.question,
+                  classes: "govuk-fieldset__legend--m"
+                }
+              },
+              hint: {
+                text: field.hint
+              } if field.hint,
+              items: radioItems,
+              errorMessage: {
+                text: error.inputErrors[field.name]
+              } if error and error.inputErrors and error.inputErrors[field.name]
+            }) }}
+
+          {% elif field.type == "checkboxes" %}
+            {% set checkboxItems = [] %}
+            {% for option in field.available_options %}
+              {% set optionValue = option.value if option.value else
+                option %}
+              {% set optionText = option.text if option.text else
+                option %}
+              {% set checkboxItems = (checkboxItems.push({
+                value: optionValue,
+                text: optionText,
+                checked: (formData[field.name] and formData[field.name].includes(optionValue))if formData and formData[field.name]
+              }), checkboxItems) %}
+            {% endfor %}
+
+            {{ govukCheckboxes({
+              name: field.name,
+              fieldset: {
+                legend: {
+                  text: field.question,
+                  classes: "govuk-fieldset__legend--m"
+                }
+              },
+              hint: {
+                text: field.hint
+              } if field.hint,
+              items: checkboxItems,
+              errorMessage: {
+                text: error.inputErrors[field.name]
+              } if error and error.inputErrors and error.inputErrors[field.name]
+            }) }}
+
+          {% elif field.type == "select" %}
+            {% set selectItems = [
+              {
+                value: "",
+                text: "Choose an option",
+                selected: false
+              }
+            ] %}
+            {% for option in field.available_options %}
+              {% set optionValue = option.value if option.value else 
+                option %}
+              {% set optionText = option.text if option.text else 
+                option %}
+              {% set selectItems = (selectItems.push({
+                value: optionValue,
+                text: optionText,
+                selected: (formData[field.name] == optionValue)if formData and formData[field.name]
+              }), selectItems) %}
+            {% endfor %}
+
+            {{ govukSelect({
+              id: field.name,
+              name: field.name,
+              label: {
+                text: field.question,
+                classes: "govuk-label--m"
+              },
+              hint: {
+                text: field.hint
+              } if field.hint,
+              items: selectItems,
+              errorMessage: {
+                text: error.inputErrors[field.name]
+              } if error and error.inputErrors and error.inputErrors[field.name]
+            }) }}
+
+          {% elif field.type == "date" %}
+            {{ govukDateInput({
+              id: field.name,
+              namePrefix: field.name,
+              fieldset: {
+                legend: {
+                  text: field.question,
+                  classes: "govuk-fieldset__legend--m"
+                }
+              },
+              hint: {
+                text: field.hint if field.hint else "For example, 27 3 1986"
+              },
+              errorMessage: {
+                text: error.inputErrors[field.name]
+              } if error and error.inputErrors and error.inputErrors[field.name],
+              items: [
+                {
+                  name: "day",
+                  label: "Day",
+                  value: formData[field.name + '-day'] if formData else "",
+                  classes: "govuk-input--width-2" + (" govuk-input--error" if error and error.inputErrors and error.inputErrors[field.name] else "")
+                },
+                {
+                  name: "month", 
+                  label: "Month",
+                  value: formData[field.name + '-month'] if formData else "",
+                  classes: "govuk-input--width-2" + (" govuk-input--error" if error and error.inputErrors and error.inputErrors[field.name] else "")
+                },
+                {
+                  name: "year",
+                  label: "Year", 
+                  value: formData[field.name + '-year'] if formData else "",
+                  classes: "govuk-input--width-4" + (" govuk-input--error" if error and error.inputErrors and error.inputErrors[field.name] else "")
+                }
+              ]
+            }) }}
+          {% endif %}
+
+        {% endfor %}
+
+        {{ govukButton({
+          text: "Submit"
+        }) }}
+
+        <input type="hidden" name="_csrf" value="{{ csrfToken }}">
+      </form>
+
+      <hr class="govuk-section-break govuk-section-break--m govuk-section-break--visible">
+
+      <p class="govuk-body">
+        <a href="/dynamic-forms" class="govuk-link">← Back to forms list</a>
+      </p>
+
+    </div>
+  </div>
+{% endblock %}

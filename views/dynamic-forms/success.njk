@@ -1,0 +1,103 @@
+{% extends "base.njk" %}
+
+{% from "govuk/components/notification-banner/macro.njk" import govukNotificationBanner %}
+{% from "govuk/components/summary-list/macro.njk" import govukSummaryList %}
+{% from "govuk/components/button/macro.njk" import govukButton %}
+
+{% block pageTitle %}
+  Form Submitted - {{ config.SERVICE_NAME }}
+{% endblock %}
+
+{% block content %}
+  <div class="govuk-grid-row">
+    <div class="govuk-grid-column-two-thirds">
+
+      {{ govukNotificationBanner({
+        type: "success",
+        html: "<h2 class=\"govuk-notification-banner__heading\">Form submitted successfully</h2><p class=\"govuk-body\">Your " + formTitle + " has been submitted.</p>"
+      }) }}
+
+      <h1 class="govuk-heading-xl">{{ formTitle }} - Submitted</h1>
+
+      <h2 class="govuk-heading-l">Your answers (JSON format)</h2>
+
+      <div class="govuk-inset-text">
+        <p class="govuk-body">
+          <strong>Raw submitted data:</strong>
+        </p>
+        <pre style="background-color: #f3f2f1; padding: 15px; border-radius: 4px; overflow-x: auto; font-family: monospace; white-space: pre-wrap; word-break: break-all;">{{ submittedData | dump(2) }}</pre>
+      </div>
+
+      <h3 class="govuk-heading-m">Formatted view</h3>
+
+      {% set summaryRows = [] %}
+
+      {% for field in formConfig %}
+        {% set fieldValue = "" %}
+        {% set fieldName = field.name %}
+
+        {% if field.type == "date" %}
+          {% set day = submittedData[fieldName + '-day'] %}
+          {% set month = submittedData[fieldName + '-month'] %}
+          {% set year = submittedData[fieldName + '-year'] %}
+          {% if day and month and year %}
+            {% set fieldValue = day + "/" + month + "/" + year %}
+          {% else %}
+            {% set fieldValue = "Not provided" %}
+          {% endif %}
+        {% elif field.type == "checkboxes" %}
+          {% if submittedData[fieldName] %}
+            {% if submittedData[fieldName] is iterable and submittedData[fieldName] is not string %}
+              {% set fieldValue = submittedData[fieldName] | join(", ") %}
+            {% else %}
+              {% set fieldValue = submittedData[fieldName] %}
+            {% endif %}
+          {% else %}
+            {% set fieldValue = "None selected" %}
+          {% endif %}
+        {% elif submittedData[fieldName] %}
+          {% set fieldValue = submittedData[fieldName] %}
+        {% else %}
+          {% set fieldValue = "Not provided" %}
+        {% endif %}
+
+        {% set summaryRows = (summaryRows.push({
+          key: {
+            text: field.question
+          },
+          value: {
+            text: fieldValue
+          }
+        }), summaryRows) %}
+      {% endfor %}
+
+      {{ govukSummaryList({
+        rows: summaryRows
+      }) }}
+
+      <div class="govuk-button-group">
+        {{ govukButton({
+          text: "Submit another form",
+          href: "/dynamic-forms",
+          classes: "govuk-button--secondary"
+        }) }}
+
+        {{ govukButton({
+          text: "Back to homepage",
+          href: "/",
+          classes: "govuk-button--secondary"
+        }) }}
+      </div>
+
+      {% if formId.startsWith('custom-') %}
+        <div class="govuk-inset-text">
+          <p class="govuk-body">
+            <strong>Note:</strong> This was a custom form generated from JSON configuration. 
+            In a real application, this data would be saved to a database or processed according to your business requirements.
+          </p>
+        </div>
+      {% endif %}
+
+    </div>
+  </div>
+{% endblock %}

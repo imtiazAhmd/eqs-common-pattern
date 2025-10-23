@@ -1,0 +1,250 @@
+{
+  "title": "Sample Application Form",
+  "description": "A demonstration of conditional wizard forms",
+  "steps": [
+    {
+      "id": "personal_info",
+      "title": "Personal Information",
+      "description": "Tell us about yourself",
+      "fields": [
+        {
+          "question": "What is your full name?",
+          "type": "text",
+          "name": "full_name",
+          "required": true,
+          "hint": "Enter your full name as it appears on official documents"
+        },
+        {
+          "question": "Are you over 18 years old?",
+          "type": "radio",
+          "name": "age_eligible",
+          "required": true,
+          "available_options": ["Yes", "No"],
+          "hint": "You must be 18 or over to continue"
+        }
+      ],
+      "conditionalNavigation": {
+        "age_eligible": {
+          "Yes": "application_type",
+          "No": "not_eligible"
+        }
+      }
+    },
+    {
+      "id": "not_eligible",
+      "title": "Application Not Available",
+      "description": "Unfortunately, you are not eligible to apply at this time",
+      "fields": [
+        {
+          "question": "You must be 18 or over to use this service",
+          "type": "textarea",
+          "name": "eligibility_info",
+          "hint": "Please return when you are 18 years old. For more information, contact our support team."
+        }
+      ],
+      "isTerminalStep": true
+    },
+    {
+      "id": "application_type",
+      "title": "Application Type",
+      "description": "What type of application are you making?",
+      "fields": [
+        {
+          "question": "Select the type of application",
+          "type": "select",
+          "name": "application_type",
+          "required": true,
+          "available_options": [
+            "Standard Application",
+            "Urgent Application",
+            "Business Application",
+            "Student Application"
+          ],
+          "hint": "Choose the option that best describes your application"
+        },
+        {
+          "question": "Have you applied before?",
+          "type": "radio",
+          "name": "previous_application",
+          "required": true,
+          "available_options": ["Yes", "No"]
+        }
+      ],
+      "conditionalNavigation": {
+        "application_type": {
+          "Urgent Application": "urgent_details",
+          "Business Application": "business_details",
+          "Student Application": "student_details",
+          "default": "standard_details"
+        }
+      }
+    },
+    {
+      "id": "urgent_details",
+      "title": "Urgent Application Details",
+      "description": "This application requires immediate processing",
+      "fields": [
+        {
+          "question": "Explain why this application is urgent",
+          "type": "textarea",
+          "name": "urgency_reason",
+          "required": true,
+          "hint": "Provide specific details about why immediate processing is needed"
+        },
+        {
+          "question": "Are you in immediate danger or need emergency assistance?",
+          "type": "radio",
+          "name": "emergency_situation",
+          "required": true,
+          "available_options": ["Yes", "No"],
+          "hint": "Select Yes if you need immediate help or are in danger"
+        }
+      ],
+      "conditionalNavigation": {
+        "emergency_situation": {
+          "Yes": "emergency_assistance",
+          "No": "contact_details"
+        }
+      }
+    },
+    {
+      "id": "emergency_assistance",
+      "title": "Emergency Assistance Required",
+      "description": "Immediate help is available",
+      "fields": [
+        {
+          "question": "Emergency contact information and next steps",
+          "type": "textarea",
+          "name": "emergency_info",
+          "hint": "Call 999 if you are in immediate danger. For urgent assistance, call our emergency helpline: 0800 123 456. Please describe your situation and location."
+        }
+      ],
+      "isUrgentStep": true
+    },
+    {
+      "id": "business_details",
+      "title": "Business Application",
+      "description": "Information about your business",
+      "fields": [
+        {
+          "question": "What is your business name?",
+          "type": "text",
+          "name": "business_name",
+          "required": true
+        },
+        {
+          "question": "What type of business is this?",
+          "type": "checkboxes",
+          "name": "business_type",
+          "available_options": [
+            "Sole Trader",
+            "Partnership",
+            "Limited Company",
+            "Charity",
+            "Non-profit",
+            "Other"
+          ],
+          "hint": "Select all that apply"
+        }
+      ]
+    },
+    {
+      "id": "student_details",
+      "title": "Student Application",
+      "description": "Information about your studies",
+      "fields": [
+        {
+          "question": "What institution are you studying at?",
+          "type": "text",
+          "name": "institution_name",
+          "required": true
+        },
+        {
+          "question": "What is your course of study?",
+          "type": "text",
+          "name": "course_name",
+          "required": true
+        },
+        {
+          "question": "What year of study are you in?",
+          "type": "select",
+          "name": "study_year",
+          "required": true,
+          "available_options": [
+            "First Year",
+            "Second Year", 
+            "Third Year",
+            "Fourth Year",
+            "Postgraduate",
+            "PhD"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "standard_details",
+      "title": "Standard Application Details",
+      "description": "Additional information for your application",
+      "fields": [
+        {
+          "question": "Why are you making this application?",
+          "type": "textarea",
+          "name": "application_reason",
+          "required": true,
+          "hint": "Explain your reasons in detail (maximum 500 words)"
+        }
+      ]
+    },
+    {
+      "id": "contact_details",
+      "title": "Contact Information",
+      "description": "How can we reach you?",
+      "fields": [
+        {
+          "question": "What is your email address?",
+          "type": "text",
+          "name": "email_address",
+          "required": true,
+          "hint": "We'll use this to send you updates about your application"
+        },
+        {
+          "question": "What is your phone number?",
+          "type": "text",
+          "name": "phone_number",
+          "required": true,
+          "hint": "Include area code, for example 020 7946 0234"
+        },
+        {
+          "question": "How would you prefer us to contact you?",
+          "type": "radio",
+          "name": "contact_preference",
+          "required": true,
+          "available_options": ["Email", "Phone", "Post"],
+          "hint": "We'll use your preferred method for important updates"
+        }
+      ]
+    },
+    {
+      "id": "confirmation",
+      "title": "Confirm Your Application",
+      "description": "Please review and confirm your details",
+      "fields": [
+        {
+          "question": "I confirm that the information I have provided is accurate and complete",
+          "type": "checkboxes",
+          "name": "confirmation_declaration",
+          "required": true,
+          "available_options": ["I agree to this declaration"],
+          "hint": "You must agree to this declaration to submit your application"
+        },
+        {
+          "question": "Would you like to receive updates about similar services?",
+          "type": "radio",
+          "name": "marketing_consent",
+          "available_options": ["Yes", "No"],
+          "hint": "We'll only send relevant information and you can opt out at any time"
+        }
+      ]
+    }
+  ]
+}

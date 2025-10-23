@@ -1,0 +1,21 @@
+{
+  "name": "dynamic-wizard-forms-example",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Example application using dynamic-wizard-forms library",
+  "main": "app.js",
+  "scripts": {
+    "start": "node app.js",
+    "dev": "nodemon app.js"
+  },
+  "dependencies": {
+    "express": "^4.18.2",
+    "nunjucks": "^3.2.4",
+    "express-session": "^1.17.3",
+    "dynamic-wizard-forms": "file:../",
+    "helmet": "^7.0.0"
+  },
+  "devDependencies": {
+    "nodemon": "^3.0.1"
+  }
+}

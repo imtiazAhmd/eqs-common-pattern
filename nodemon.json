@@ -1,0 +1,30 @@
+{
+  "watch": [
+    "public/app.js",
+    "locales/**/*.json",
+    "src/config/wizardForm.json"
+  ],
+  "ext": "js,json",
+  "ignore": [
+    "public/assets/**/*",
+    "public/css/**/*",
+    "public/js/**/*",
+    "public/*.map",
+    "public/**/*.map",
+    "public/src/",
+    "public/tests/",
+    "public/types/",
+    "node_modules/",
+    "src/**/*",
+    "!src/config/wizardForm.json",
+    "*.log",
+    "*.tmp"
+  ],
+  "delay": "1000ms",
+  "debounce": 500,
+  "verbose": false,
+  "env": {
+    "NODE_ENV": "development"
+  },
+  "exec": "node public/app.js"
+}
