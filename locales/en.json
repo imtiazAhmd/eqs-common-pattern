@@ -32,7 +32,10 @@
   "pages": {
     "home": {
       "defaultHeading": "Default page template",
-      "defaultTemplate": "This is a default page template.",
+      "defaultTemplate": "Dynamic Wizard Forms is a prototype and the outcome of a Learning & Development project, led by Imtiaz Ahmed (Lead Software Developer, CCQ/MCC Team, LAA Digital).",
+      "bodyText": "It demonstrates how to build multi-step forms based on a JSON configuration, using Node.js, Express, TypeScript, and GOV.UK Frontend components.",
+      "bodyText2": " This service investigates how to simplify form generation across LAA Digital by enabling rapid, JSON-driven creation of complex, multi-step forms.",
+      "contactInfo": "For more information, please contact Imtiaz Ahmed at imtiaz.ahmed@digital.justice.gov.uk",
       "mountainsOfTheWorld": "Mountains of the world",
       "rowName": {
         "label": "Name",

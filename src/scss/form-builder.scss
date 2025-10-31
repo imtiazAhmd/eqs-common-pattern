@@ -1,0 +1,241 @@
+/**
+ * Form Builder Styles
+ */
+
+/* JSON Preview styling */
+.form-builder-json-preview {
+  background-color: #f3f2f1;
+  border: 2px solid #b1b4b6;
+  padding: 1.5rem;
+  overflow-x: auto;
+  max-height: 600px;
+  font-family: monospace;
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+.form-builder-json-preview code {
+  background-color: transparent;
+  padding: 0;
+}
+
+/* Step and Field containers */
+.form-builder-step {
+  border-left: 4px solid #1d70b8;
+}
+
+.form-builder-field {
+  background-color: #f8f8f8;
+  border-left: 3px solid #b1b4b6;
+  padding-left: 1rem;
+}
+
+/* Summary card customizations for builder */
+.govuk-summary-card__title-wrapper {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.govuk-summary-card__actions {
+  display: flex;
+  gap: 1rem;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.govuk-summary-card__action {
+  margin: 0;
+}
+
+.govuk-summary-card__action a {
+  font-size: 0.875rem;
+  text-decoration: none;
+}
+
+.govuk-summary-card__action a:hover {
+  text-decoration: underline;
+}
+
+/* Field options group */
+.field-options-group {
+  margin-top: 1rem;
+  padding-top: 1rem;
+  border-top: 1px solid #b1b4b6;
+}
+
+/* Notification positioning */
+#notification-banner {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
+
+/* Responsive adjustments */
+@media (max-width: 40.0625em) {
+  .govuk-summary-card__actions {
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+  
+  .form-builder-json-preview {
+    font-size: 12px;
+    padding: 1rem;
+  }
+}
+
+/* Tabs customization */
+.govuk-tabs__panel {
+  padding: 2rem 0;
+}
+
+/* Form builder specific button spacing */
+.form-builder-step .govuk-button-group {
+  margin-top: 2rem;
+}
+
+/* Drag and drop placeholder (for future enhancement) */
+.form-builder-step.dragging {
+  opacity: 0.5;
+  border-left-color: #ffdd00;
+}
+
+.form-builder-field.dragging {
+  opacity: 0.5;
+  background-color: #fff7bf;
+}
+
+/* Loading state */
+.form-builder-loading {
+  position: relative;
+}
+
+.form-builder-loading::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(255, 255, 255, 0.7);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Success/Error states */
+.govuk-notification-banner--success {
+  border-color: #00703c;
+}
+
+.govuk-notification-banner--success .govuk-notification-banner__header {
+  background-color: #00703c;
+}
+
+/* Validation results styling */
+#validation-results {
+  scroll-margin-top: 2rem;
+}
+
+/* Export section spacing */
+#export-filename {
+  vertical-align: middle;
+}
+
+#download-json-btn {
+  vertical-align: middle;
+  margin-left: 1rem;
+}
+
+/* Field type indicator colors */
+.field-type[value="text"] {
+  border-left: 3px solid #1d70b8;
+}
+
+.field-type[value="textarea"] {
+  border-left: 3px solid #4c2c92;
+}
+
+.field-type[value="radio"] {
+  border-left: 3px solid #00703c;
+}
+
+.field-type[value="checkboxes"] {
+  border-left: 3px solid #f47738;
+}
+
+.field-type[value="select"] {
+  border-left: 3px solid #912b88;
+}
+
+.field-type[value="date"] {
+  border-left: 3px solid #d4351c;
+}
+
+/* Helper text styling */
+.govuk-hint {
+  margin-bottom: 0.5rem;
+}
+
+/* Improved spacing for form groups in builder */
+.form-builder-step .govuk-form-group,
+.form-builder-field .govuk-form-group {
+  margin-bottom: 1.5rem;
+}
+
+.form-builder-step .govuk-form-group:last-child,
+.form-builder-field .govuk-form-group:last-child {
+  margin-bottom: 0;
+}
+
+/* Summary card content padding */
+.govuk-summary-card__content {
+  padding: 1.5rem;
+}
+
+/* Add Field button positioning */
+.add-field-btn {
+  margin-top: 1rem;
+}
+
+/* Conditional Navigation Rules */
+.conditional-nav-rule {
+  background-color: #fff;
+  border: 1px solid #b1b4b6;
+  padding: 1rem;
+  border-radius: 4px;
+}
+
+.conditional-nav-rule .govuk-form-group {
+  margin-bottom: 1rem;
+}
+
+.conditional-nav-rule:hover {
+  border-color: #1d70b8;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.conditional-navigation-list {
+  margin-top: 1rem;
+  margin-bottom: 1rem;
+}
+
+.add-conditional-nav-btn {
+  margin-top: 0.5rem;
+}
+
+/* Print styles */
+@media print {
+  .form-builder-step .govuk-summary-card__actions,
+  .form-builder-field .govuk-summary-card__actions,
+  .govuk-button,
+  .govuk-tabs__list {
+    display: none;
+  }
+  
+  .govuk-tabs__panel {
+    display: block !important;
+  }
+}

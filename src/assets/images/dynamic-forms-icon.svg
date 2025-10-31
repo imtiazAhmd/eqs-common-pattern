@@ -1,0 +1,24 @@
+<svg width="200" height="150" viewBox="0 0 200 150" xmlns="http://www.w3.org/2000/svg">
+  <!-- Background -->
+  <rect width="200" height="150" fill="#f3f2f1"/>
+  
+  <!-- Form representation -->
+  <rect x="40" y="30" width="120" height="90" rx="4" fill="#ffffff" stroke="#0b0c0c" stroke-width="2"/>
+  
+  <!-- Form lines (representing fields) -->
+  <line x1="55" y1="50" x2="145" y2="50" stroke="#1d70b8" stroke-width="3" stroke-linecap="round"/>
+  <line x1="55" y1="70" x2="120" y2="70" stroke="#1d70b8" stroke-width="3" stroke-linecap="round"/>
+  
+  <!-- Radio buttons -->
+  <circle cx="60" cy="90" r="5" fill="none" stroke="#0b0c0c" stroke-width="2"/>
+  <circle cx="60" cy="105" r="5" fill="none" stroke="#0b0c0c" stroke-width="2"/>
+  <circle cx="60" cy="90" r="3" fill="#1d70b8"/>
+  
+  <!-- Checkbox -->
+  <rect x="100" y="87" width="10" height="10" rx="2" fill="none" stroke="#0b0c0c" stroke-width="2"/>
+  <path d="M102 92 L104 94 L108 89" stroke="#00703c" stroke-width="2" fill="none" stroke-linecap="round"/>
+  
+  <!-- Arrow indicating dynamic flow -->
+  <path d="M170 60 L185 75 L170 90" fill="none" stroke="#00703c" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+  <circle cx="185" cy="75" r="4" fill="#00703c"/>
+</svg>
