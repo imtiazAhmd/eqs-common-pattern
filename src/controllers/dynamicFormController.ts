@@ -22,7 +22,7 @@ import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 
 // Load wizard form configuration from JSON
-const FORM_CONFIG_PATH = join(process.cwd(), 'src', 'config', 'cla_public.json');
+const FORM_CONFIG_PATH = join(process.cwd(), 'src', 'config', 'test.json');
 
 /**
  * Type guard to check if an unknown value is a WizardForm

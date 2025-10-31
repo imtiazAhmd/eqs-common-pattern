@@ -1,0 +1,340 @@
+{% extends "base.njk" %}
+
+{% block content %}
+<div class="govuk-width-container">
+  <main class="govuk-main-wrapper" id="main-content" role="main">
+    <h1 class="govuk-heading-xl">Visual Form Builder</h1>
+    
+    <div class="govuk-tabs" data-module="govuk-tabs">
+      <h2 class="govuk-tabs__title">Contents</h2>
+      <ul class="govuk-tabs__list">
+        <li class="govuk-tabs__list-item govuk-tabs__list-item--selected">
+          <a class="govuk-tabs__tab" href="#build">
+            Build Form
+          </a>
+        </li>
+        <li class="govuk-tabs__list-item">
+          <a class="govuk-tabs__tab" href="#preview">
+            JSON Preview
+          </a>
+        </li>
+        <li class="govuk-tabs__list-item">
+          <a class="govuk-tabs__tab" href="#import">
+            Import/Export
+          </a>
+        </li>
+      </ul>
+
+      <!-- Build Tab -->
+      <div class="govuk-tabs__panel" id="build">
+        <form id="form-builder-form">
+          <!-- Form Title -->
+          <div class="govuk-form-group">
+            <label class="govuk-label govuk-label--l" for="form-title">
+              Form Title
+            </label>
+            <input class="govuk-input govuk-!-width-two-thirds" id="form-title" name="formTitle" type="text" required>
+          </div>
+
+          <!-- Form Description -->
+          <div class="govuk-form-group">
+            <label class="govuk-label govuk-label--m" for="form-description">
+              Form Description
+            </label>
+            <textarea class="govuk-textarea" id="form-description" name="formDescription" rows="3"></textarea>
+          </div>
+
+          <hr class="govuk-section-break govuk-section-break--l govuk-section-break--visible">
+
+          <!-- Steps Container -->
+          <div id="steps-container">
+            <h2 class="govuk-heading-l">Form Steps</h2>
+            <div id="steps-list"></div>
+            
+            <button type="button" class="govuk-button govuk-button--secondary" id="add-step-btn">
+              Add Step
+            </button>
+          </div>
+
+          <hr class="govuk-section-break govuk-section-break--l govuk-section-break--visible">
+
+          <!-- Action Buttons -->
+          <div class="govuk-button-group">
+            <button type="button" class="govuk-button" id="validate-btn">
+              Validate Configuration
+            </button>
+            <button type="button" class="govuk-button govuk-button--secondary" id="save-btn">
+              Save to File
+            </button>
+          </div>
+        </form>
+
+        <!-- Validation Results -->
+        <div id="validation-results" class="govuk-!-margin-top-6" style="display: none;"></div>
+      </div>
+
+      <!-- JSON Preview Tab -->
+      <div class="govuk-tabs__panel govuk-tabs__panel--hidden" id="preview">
+        <h2 class="govuk-heading-l">JSON Configuration Preview</h2>
+        <div class="govuk-form-group">
+          <button type="button" class="govuk-button govuk-button--secondary" id="update-preview-btn">
+            Update Preview
+          </button>
+          <button type="button" class="govuk-button govuk-button--secondary" id="copy-json-btn">
+            Copy JSON
+          </button>
+        </div>
+        <pre id="json-preview" class="form-builder-json-preview"><code></code></pre>
+      </div>
+
+      <!-- Import/Export Tab -->
+      <div class="govuk-tabs__panel govuk-tabs__panel--hidden" id="import">
+        <h2 class="govuk-heading-l">Import/Export Configuration</h2>
+        
+        <!-- Export Section -->
+        <div class="govuk-form-group">
+          <label class="govuk-label govuk-label--m" for="export-filename">
+            Export Filename
+          </label>
+          <div class="govuk-hint">
+            Use lowercase letters, numbers, hyphens, and underscores only
+          </div>
+          <input class="govuk-input govuk-!-width-one-half" id="export-filename" name="exportFilename" type="text" placeholder="my-form">
+          <button type="button" class="govuk-button govuk-!-margin-left-2" id="download-json-btn">
+            Download JSON
+          </button>
+        </div>
+
+        <hr class="govuk-section-break govuk-section-break--m govuk-section-break--visible">
+
+        <!-- Import Section -->
+        <div class="govuk-form-group">
+          <label class="govuk-label govuk-label--m" for="import-json">
+            Import JSON Configuration
+          </label>
+          <div class="govuk-hint">
+            Paste your JSON configuration here to import it
+          </div>
+          <textarea class="govuk-textarea" id="import-json" name="importJson" rows="10"></textarea>
+          <button type="button" class="govuk-button govuk-!-margin-top-2" id="import-json-btn">
+            Import Configuration
+          </button>
+        </div>
+
+        {% if existingForms.length > 0 %}
+        <hr class="govuk-section-break govuk-section-break--m govuk-section-break--visible">
+        
+        <!-- Load Existing Forms -->
+        <div class="govuk-form-group">
+          <label class="govuk-label govuk-label--m" for="existing-forms-select">
+            Load Existing Form
+          </label>
+          <select class="govuk-select govuk-!-width-one-half" id="existing-forms-select">
+            <option value="">Select a form...</option>
+            {% for form in existingForms %}
+            <option value="{{ form.id }}">{{ form.name }}</option>
+            {% endfor %}
+          </select>
+          <button type="button" class="govuk-button govuk-button--secondary govuk-!-margin-left-2" id="load-existing-btn">
+            Load Form
+          </button>
+        </div>
+        {% endif %}
+      </div>
+    </div>
+
+    <!-- Notification Banner (hidden by default) -->
+    <div id="notification-banner" class="govuk-notification-banner" role="region" style="display: none;">
+      <div class="govuk-notification-banner__header">
+        <h2 class="govuk-notification-banner__title" id="notification-banner-title">
+          Important
+        </h2>
+      </div>
+      <div class="govuk-notification-banner__content">
+        <p class="govuk-notification-banner__heading" id="notification-message">
+          <!-- Message will be inserted here -->
+        </p>
+      </div>
+    </div>
+  </main>
+</div>
+
+<!-- Step Template (Hidden) -->
+<template id="step-template">
+  <div class="form-builder-step govuk-!-margin-bottom-6" data-step-index="">
+    <div class="govuk-summary-card">
+      <div class="govuk-summary-card__title-wrapper">
+        <h2 class="govuk-summary-card__title">Step <span class="step-number"></span></h2>
+        <ul class="govuk-summary-card__actions">
+          <li class="govuk-summary-card__action">
+            <a class="move-step-up" href="#" role="button">Move up</a>
+          </li>
+          <li class="govuk-summary-card__action">
+            <a class="move-step-down" href="#" role="button">Move down</a>
+          </li>
+          <li class="govuk-summary-card__action">
+            <a class="delete-step" href="#" role="button">Delete</a>
+          </li>
+        </ul>
+      </div>
+      <div class="govuk-summary-card__content">
+        <div class="govuk-form-group">
+          <label class="govuk-label" for="">Step ID</label>
+          <div class="govuk-hint">Unique identifier (lowercase, underscores, no spaces)</div>
+          <input class="govuk-input step-id" type="text" required>
+        </div>
+
+        <div class="govuk-form-group">
+          <label class="govuk-label" for="">Step Title</label>
+          <input class="govuk-input step-title" type="text" required>
+        </div>
+
+        <div class="govuk-form-group">
+          <label class="govuk-label" for="">Step Description</label>
+          <textarea class="govuk-textarea step-description" rows="2"></textarea>
+        </div>
+
+        <div class="govuk-checkboxes govuk-checkboxes--small">
+          <div class="govuk-checkboxes__item">
+            <input class="govuk-checkboxes__input step-is-terminal" type="checkbox">
+            <label class="govuk-label govuk-checkboxes__label">
+              Terminal Step (ends wizard early)
+            </label>
+          </div>
+          <div class="govuk-checkboxes__item">
+            <input class="govuk-checkboxes__input step-is-urgent" type="checkbox">
+            <label class="govuk-label govuk-checkboxes__label">
+              Urgent Step (requires immediate attention)
+            </label>
+          </div>
+        </div>
+
+        <hr class="govuk-section-break govuk-section-break--m govuk-section-break--visible">
+
+        <h3 class="govuk-heading-m">Fields</h3>
+        <div class="fields-list"></div>
+        <button type="button" class="govuk-button govuk-button--secondary govuk-button--small add-field-btn">
+          Add Field
+        </button>
+
+        <hr class="govuk-section-break govuk-section-break--m govuk-section-break--visible">
+
+        <details class="govuk-details">
+          <summary class="govuk-details__summary">
+            <span class="govuk-details__summary-text">
+              Conditional Navigation (Optional)
+            </span>
+          </summary>
+          <div class="govuk-details__text">
+            <p class="govuk-body-s">Define step routing based on user answers. Leave empty for sequential navigation.</p>
+            
+            <div class="conditional-navigation-list"></div>
+            
+            <button type="button" class="govuk-button govuk-button--secondary govuk-button--small add-conditional-nav-btn">
+              Add Conditional Rule
+            </button>
+          </div>
+        </details>
+</div>
+    </div>
+  </div>
+</template>
+
+<!-- Field Template (Hidden) -->
+<template id="field-template">
+  <div class="form-builder-field govuk-!-margin-bottom-4" data-field-index="">
+    <div class="govuk-summary-card">
+      <div class="govuk-summary-card__title-wrapper">
+        <h4 class="govuk-summary-card__title">Field <span class="field-number"></span></h4>
+        <ul class="govuk-summary-card__actions">
+          <li class="govuk-summary-card__action">
+            <a class="move-field-up" href="#" role="button">Move up</a>
+          </li>
+          <li class="govuk-summary-card__action">
+            <a class="move-field-down" href="#" role="button">Move down</a>
+          </li>
+          <li class="govuk-summary-card__action">
+            <a class="delete-field" href="#" role="button">Delete</a>
+          </li>
+        </ul>
+      </div>
+      <div class="govuk-summary-card__content">
+        <div class="govuk-form-group">
+          <label class="govuk-label govuk-label--s">Field Type</label>
+          <select class="govuk-select field-type" required>
+            <option value="">Select type...</option>
+            <option value="text">Text Input</option>
+            <option value="textarea">Text Area</option>
+            <option value="radio">Radio Buttons</option>
+            <option value="checkboxes">Checkboxes</option>
+            <option value="select">Dropdown Select</option>
+            <option value="date">Date Input</option>
+          </select>
+        </div>
+
+        <div class="govuk-form-group">
+          <label class="govuk-label govuk-label--s">Field Name</label>
+          <div class="govuk-hint">Variable name (lowercase, underscores, no spaces)</div>
+          <input class="govuk-input field-name" type="text" required>
+        </div>
+
+        <div class="govuk-form-group">
+          <label class="govuk-label govuk-label--s">Question Text</label>
+          <input class="govuk-input field-question" type="text" required>
+        </div>
+
+        <div class="govuk-form-group">
+          <label class="govuk-label govuk-label--s">Hint Text</label>
+          <input class="govuk-input field-hint" type="text">
+        </div>
+
+        <div class="govuk-checkboxes govuk-checkboxes--small">
+          <div class="govuk-checkboxes__item">
+            <input class="govuk-checkboxes__input field-required" type="checkbox">
+            <label class="govuk-label govuk-checkboxes__label">
+              Required field
+            </label>
+          </div>
+        </div>
+
+        <div class="govuk-form-group field-options-group" style="display: none;">
+          <label class="govuk-label govuk-label--s">Options (one per line)</label>
+          <textarea class="govuk-textarea field-options" rows="4"></textarea>
+        </div>
+      </div>
+    </div>
+  </div>
+</template>
+
+<!-- Conditional Navigation Rule Template (Hidden) -->
+<template id="conditional-nav-template">
+  <div class="conditional-nav-rule govuk-!-margin-bottom-3" data-nav-index="">
+    <div class="govuk-form-group">
+      <label class="govuk-label govuk-label--s">Field Name</label>
+      <input class="govuk-input nav-field-name" type="text" placeholder="e.g., applying_for_other">
+    </div>
+    
+    <div class="govuk-form-group">
+      <label class="govuk-label govuk-label--s">When Value Is</label>
+      <input class="govuk-input nav-field-value" type="text" placeholder="e.g., Yes">
+    </div>
+    
+    <div class="govuk-form-group">
+      <label class="govuk-label govuk-label--s">Go To Step ID</label>
+      <input class="govuk-input nav-target-step" type="text" placeholder="e.g., representative_details">
+    </div>
+    
+    <button type="button" class="govuk-button govuk-button--warning govuk-button--small delete-nav-rule">
+      Remove Rule
+    </button>
+    
+    <hr class="govuk-section-break govuk-section-break--m">
+  </div>
+</template>
+
+<input type="hidden" name="_csrf" value="{{ csrfToken }}">
+
+<link rel="stylesheet" href="/css/form-builder.css">
+<script src="/js/form-builder.js" defer></script>
+{% endblock %}
+

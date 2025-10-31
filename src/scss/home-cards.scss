@@ -1,0 +1,97 @@
+/**
+ * Home Page Cards Styling
+ */
+
+/* Card container */
+.govuk-summary-card {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.govuk-summary-card__content {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  padding: 2rem;
+}
+
+/* Card image container */
+.card-image-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 150px;
+  background-color: #f8f8f8;
+  border-radius: 4px;
+  padding: 1rem;
+}
+
+.card-image {
+  max-width: 100%;
+  height: auto;
+  display: block;
+}
+
+/* Card title */
+.govuk-summary-card__content .govuk-heading-m {
+  margin-top: 0;
+  margin-bottom: 1rem;
+}
+
+/* Card description */
+.govuk-summary-card__content .govuk-body {
+  flex-grow: 1;
+  margin-bottom: 1.5rem;
+}
+
+/* Card button */
+.govuk-summary-card__content .govuk-button {
+  margin-bottom: 0;
+  width: 100%;
+  text-align: center;
+  margin-top: auto;
+}
+
+/* Ensure equal height cards on desktop */
+@media (min-width: 40.0625em) {
+  .govuk-grid-row {
+    display: flex;
+    flex-wrap: wrap;
+  }
+  
+  .govuk-grid-column-one-half {
+    display: flex;
+  }
+}
+
+/* Mobile adjustments */
+@media (max-width: 40.0625em) {
+  .govuk-summary-card__content {
+    padding: 1.5rem;
+  }
+  
+  .card-image-container {
+    min-height: 120px;
+  }
+  
+  .govuk-grid-column-one-half {
+    margin-bottom: 1.5rem;
+  }
+}
+
+/* Hover effects */
+.govuk-summary-card:hover {
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  transition: box-shadow 0.3s ease;
+}
+
+.govuk-summary-card:hover .card-image-container {
+  background-color: #e8f4fd;
+  transition: background-color 0.3s ease;
+}
+
+/* Features list styling */
+.govuk-list--bullet {
+  margin-top: 1rem;
+}

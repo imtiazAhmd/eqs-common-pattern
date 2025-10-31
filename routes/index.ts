@@ -8,6 +8,11 @@ import {
   postDynamicForm,
   getFormSuccess
 } from '#src/controllers/dynamicFormController.js';
+import {
+  getFormBuilder,
+  saveFormConfig,
+  validateFormConfigEndpoint
+} from '#src/controllers/formBuilderController.js';
 import { exampleApiService } from '#src/services/exampleApiService.js';
 
 // Create a new router
@@ -72,6 +77,14 @@ router.get('/dynamic-forms', getFormsList);
 router.get('/dynamic-forms/:formId', getDynamicForm);
 router.post('/dynamic-forms/:formId', postDynamicForm);
 router.get('/dynamic-forms/:formId/success', getFormSuccess);
+
+// Form Builder routes
+router.get('/form-builder', getFormBuilder);
+router.post('/form-builder/save', saveFormConfig);
+router.post('/form-builder/validate', validateFormConfigEndpoint);
+
+// Serve config files for loading in form builder
+router.use('/config', express.static('src/config'));
 
 
 export default router;

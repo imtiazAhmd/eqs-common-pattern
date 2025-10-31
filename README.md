@@ -7,19 +7,24 @@ A flexible, type-safe system for generating multi-step wizard forms from JSON co
 
 ## Overview
 
-This system enables rapid development of complex, multi-step forms through JSON configuration, eliminating the need to manually code each form page. It supports conditional navigation, field validation, and session management out of the box.
-
-# Dynamic Wizard Forms - JSON-Driven Form Generation
-
-[![Standards Icon]][Standards Link]
-
-![govuk-frontend 5.10.2](https://img.shields.io/badge/govuk--frontend%20version-5.10.2-005EA5?logo=gov.uk&style=flat)
-
-A flexible, type-safe system for generating multi-step wizard forms from JSON configuration, built with Express, TypeScript, and GOV.UK Design System components.
-
-## Overview
+**This is a prototype and the outcome of a Learning & Development project**, led by **Imtiaz Ahmed** (Lead Software Developer, CCQ/MCC Team, LAA Digital). The project investigates how to simplify and standardize form generation across LAA Digital services.
 
 This system enables rapid development of complex, multi-step forms through JSON configuration, eliminating the need to manually code each form page. It supports conditional navigation, field validation, and session management out of the box.
+
+### Visual Form Builder
+
+In addition to the JSON-driven form engine, this project includes a **Visual Form Builder**—a web-based GUI that allows both technical and non-technical users to create, configure, and manage wizard forms without writing JSON manually. The form builder provides:
+
+- **Intuitive Interface**: Build forms visually through a web UI
+- **Real-time Validation**: Check configurations before saving
+- **Live JSON Preview**: See generated JSON as you build
+- **Import/Export**: Load existing forms or export new configurations
+- **All Field Types**: Support for text, textarea, radio, checkboxes, select, and date fields
+- **Step Management**: Easily add, reorder, and configure wizard steps
+
+Access the form builder at `/form-builder` after starting the application. See the [Visual Form Builder Documentation](./docs/FORM_BUILDER.md) for detailed usage instructions.
+
+For questions or more information, contact: [imtiaz.ahmed@justice.gov.uk](mailto:imtiaz.ahmed@justice.gov.uk)
 
 ## Features
 

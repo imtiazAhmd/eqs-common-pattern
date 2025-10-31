@@ -38,7 +38,12 @@ const copyAssets = async (): Promise<void> => {
 			path.resolve('./node_modules/@ministryofjustice/frontend/moj/assets/images'),
 			path.resolve('./public/assets/images')
 		);
-		console.log('✅ GOV.UK assets (including rebrand) & MOJ Frontend assets copied successfully.');
+		// Copy custom assets from src/assets to public/assets
+		await fs.copy(
+			path.resolve('./src/assets'),
+			path.resolve('./public/assets')
+		);
+		console.log('✅ GOV.UK assets (including rebrand), MOJ Frontend assets & custom assets copied successfully.');
 	} catch (error) {
 		console.error('❌ Failed to copy assets:', error);
 		process.exit(UNCAUGHT_FATAL_EXCEPTION);
@@ -242,7 +247,11 @@ const watchBuild = async (): Promise<void> => {
 		]);
 
 		// Watch for asset changes and copy them
-		const assetWatcher = chokidar.watch(['node_modules/govuk-frontend/dist/govuk/assets/**/*', 'node_modules/@ministryofjustice/frontend/moj/assets/images/**/*'], {
+		const assetWatcher = chokidar.watch([
+			'node_modules/govuk-frontend/dist/govuk/assets/**/*',
+			'node_modules/@ministryofjustice/frontend/moj/assets/images/**/*',
+			'src/assets/**/*'
+		], {
 			ignored: /node_modules\/(?!govuk-frontend|@ministryofjustice)/,
 			persistent: true
 		});

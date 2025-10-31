@@ -1,0 +1,77 @@
+{
+  "title": "Eos sit odit optio",
+  "description": "Lorem aliqua Non nu",
+  "steps": [
+    {
+      "id": "step_2",
+      "title": "Enim ratione facere",
+      "description": "Sit quis suscipit pa",
+      "isTerminalStep": false,
+      "isUrgentStep": false,
+      "fields": [
+        {
+          "type": "radio",
+          "name": "radio_button",
+          "question": "Minus anim esse corp",
+          "hint": "Et perspiciatis des",
+          "required": true,
+          "available_options": [
+            "Option 1",
+            "Option 2",
+            "Option 3",
+            "Option 4"
+          ]
+        }
+      ],
+      "conditionalNavigation": {
+        "radio_button": {
+          "Option 2": "step_3"
+        }
+      }
+    },
+    {
+      "id": "step_1",
+      "title": "Omnis quisquam odio",
+      "description": "Adipisicing consequu",
+      "fields": [
+        {
+          "type": "text",
+          "name": "text_input",
+          "question": "Nihil temporibus quo",
+          "hint": "Enim reprehenderit q",
+          "required": true
+        },
+        {
+          "type": "textarea",
+          "name": "text_area",
+          "question": "Atque fugit amet p",
+          "hint": "Illo minim culpa inc",
+          "required": true
+        }
+      ]
+    },
+    {
+      "id": "step_3",
+      "title": "Velit unde dolorum",
+      "description": "Labore nostrum dolor",
+      "fields": [
+        {
+          "type": "date",
+          "name": "date_input",
+          "question": "Velit ad aut atque e",
+          "hint": "Nobis nulla proident"
+        },
+        {
+          "type": "checkboxes",
+          "name": "confiramtion",
+          "question": "accept",
+          "hint": "accept application",
+          "required": true,
+          "available_options": [
+            "Confirm"
+          ]
+        }
+      ]
+    }
+  ]
+}
