@@ -1,13 +1,357 @@
-# Legal Aid Agency - Express with TypeScript template (ETT)
+# Dynamic Wizard Forms - JSON-Driven Form Generation
 [![Standards Icon]][Standards Link]
 
 ![govuk-frontend 5.10.2](https://img.shields.io/badge/govuk--frontend%20version-5.10.2-005EA5?logo=gov.uk&style=flat)
 
-## Full technical documentation
+A flexible, type-safe system for generating multi-step wizard forms from JSON configuration, built with Express, TypeScript, and GOV.UK Design System components.
 
-View the [full technical documentation here](https://ministryofjustice.github.io/laa-express-typescript-template/)
+## Overview
+
+This system enables rapid development of complex, multi-step forms through JSON configuration, eliminating the need to manually code each form page. It supports conditional navigation, field validation, and session management out of the box.
+
+# Dynamic Wizard Forms - JSON-Driven Form Generation
+
+[![Standards Icon]][Standards Link]
+
+![govuk-frontend 5.10.2](https://img.shields.io/badge/govuk--frontend%20version-5.10.2-005EA5?logo=gov.uk&style=flat)
+
+A flexible, type-safe system for generating multi-step wizard forms from JSON configuration, built with Express, TypeScript, and GOV.UK Design System components.
+
+## Overview
+
+This system enables rapid development of complex, multi-step forms through JSON configuration, eliminating the need to manually code each form page. It supports conditional navigation, field validation, and session management out of the box.
+
+## Features
+
+- **JSON-Driven Configuration**: Define entire multi-step forms in JSON
+- **Conditional Navigation**: Dynamic step routing based on user responses
+- **Terminal Steps**: Support for early wizard termination (e.g., eligibility failures)
+- **Urgent Steps**: Flag steps requiring immediate attention
+- **Type-Safe**: Full TypeScript support with validated types
+- **GOV.UK Design System**: Built-in integration with all GDS components
+- **Session Management**: Automatic form data persistence across steps
+- **Validation**: Server-side validation with error summary generation
+
+## Architecture
+
+### System Flow
+
+```
+JSON Config → Controller → Helper Functions → Nunjucks Templates → GOV.UK Macros
+     ↓            ↓              ↓                    ↓                  ↓
+  Config      Request         Process             Render            Display
+  Loading     Handling        Data/Nav            Views             Components
+```
+
+### Component Breakdown
+
+#### 1. JSON Configuration (`src/config/*.json`)
+
+Define your wizard form structure:
+
+```json
+{
+  "title": "Legal Aid Application",
+  "description": "Complete application for legal aid assistance",
+  "steps": [
+    {
+      "id": "personal_info",
+      "title": "Personal Information",
+      "description": "Tell us about yourself",
+      "fields": [
+        {
+          "question": "What is your full name?",
+          "type": "text",
+          "name": "full_name",
+          "required": true,
+          "hint": "Enter your full legal name"
+        }
+      ],
+      "conditionalNavigation": {
+        "applying_for_other": {
+          "Yes": "representative_details",
+          "No": "contact_details"
+        }
+      }
+    }
+  ]
+}
+```
+
+**Supported Field Types:**
+- `text` - Single-line text input
+- `textarea` - Multi-line text input
+- `radio` - Radio button group
+- `checkboxes` - Checkbox group (multi-select)
+- `select` - Dropdown selection
+- `date` - GOV.UK date input (day/month/year)
+
+**Conditional Navigation:**
+
+Define step routing based on field values:
+
+```json
+"conditionalNavigation": {
+  "field_name": {
+    "value1": "target_step_id",
+    "value2": "another_step_id",
+    "default": "fallback_step_id"
+  }
+}
+```
+
+**Special Step Types:**
+- `isTerminalStep: true` - Ends the wizard (e.g., user not eligible)
+- `isUrgentStep: true` - Flags urgent matters requiring immediate action
+
+#### 2. Controller (`src/controllers/dynamicFormController.ts`)
+
+The controller orchestrates the entire form flow:
+
+**Key Responsibilities:**
+- Load and validate JSON configuration
+- Handle GET requests to render form steps
+- Process POST submissions and validate data
+- Manage session storage for multi-step data
+- Coordinate navigation between steps
+
+**Main Functions:**
+
+```typescript
+// Display available forms
+export function getFormsList(req, res, next)
+
+// Render a specific form step
+export function getDynamicForm(req, res, next)
+
+// Process form submission and navigate
+export function postDynamicForm(req, res, next)
+
+// Display success page with submitted data
+export function getFormSuccess(req, res, next)
+```
+
+**Request Flow:**
+
+1. **GET `/dynamic-forms/:formId?step=N`**
+   - Parse step number from query parameter
+   - Load form configuration from JSON
+   - Retrieve existing session data
+   - Process field configuration
+   - Render wizard-step template
+
+2. **POST `/dynamic-forms/:formId?step=N`**
+   - Extract form data from request body
+   - Validate required fields
+   - Store data in session
+   - Determine next step (conditional or sequential)
+   - Redirect to appropriate step or success page
+
+#### 3. Helper Functions (`src/controllers/wizardFormHelpers.ts`)
+
+Modular utilities for common wizard operations:
+
+**Navigation Helpers:**
+
+```typescript
+// Parse step parameter safely
+parseStepParameter(stepParam: unknown): number
+
+// Determine next step based on conditional logic
+determineNextStep(currentStep, formData): string | null
+
+// Find step index by step ID
+findStepIndexById(steps, stepId): number
+
+// Handle conditional navigation with all logic
+handleConditionalNavigation(params, res): void
+```
+
+**Validation & Rendering:**
+
+```typescript
+// Render step with validation errors
+renderStepWithErrors(params): void
+```
+
+**Data Transformation Helpers (`src/helpers/dataTransformers.ts`):**
+
+```typescript
+// Type guards
+isRecord(value): boolean
+hasProperty(obj, key): boolean
+
+// Form data processing
+extractFormFields(body, keys): Record<string, unknown>
+dateStringFromThreeFields(day, month, year): string
+```
+
+#### 4. Type Definitions (`src/types/form-types.ts`)
+
+TypeScript interfaces ensure type safety:
+
+```typescript
+export interface FormField {
+  question: string;
+  type: 'radio' | 'checkboxes' | 'text' | 'textarea' | 'date' | 'select';
+  name?: string;
+  required?: boolean;
+  hint?: string;
+  available_options?: string[];
+}
+
+export interface WizardStep {
+  id: string;
+  title: string;
+  description?: string;
+  fields: FormField[];
+  conditionalNavigation?: ConditionalNavigation;
+  isTerminalStep?: boolean;
+  isUrgentStep?: boolean;
+}
+
+export interface WizardForm {
+  title: string;
+  description?: string;
+  steps: WizardStep[];
+}
+```
+
+#### 5. Nunjucks Templates
+
+**Main Template (`views/dynamic-forms/wizard-step.njk`):**
+
+Renders the wizard step with:
+- Progress indicator
+- Error summary (if validation fails)
+- Step title and description
+- Form fields (via macro)
+- Navigation buttons (Previous/Next/Submit)
+- Special handling for terminal/urgent steps
+
+**Key Template Variables:**
+- `formId` - Form identifier
+- `currentStep` / `totalSteps` - Progress tracking
+- `formConfig` - Array of processed fields
+- `formData` - Current form data from session
+- `error` - Validation errors
+- `isTerminalStep` / `isUrgentStep` - Step flags
+
+#### 6. Form Field Macro (`views/dynamic-forms/macros/form-field.njk`)
+
+Dynamically renders GOV.UK components based on field type:
+
+```nunjucks
+{% macro renderFormField(field, fieldValue, fieldError, formData) %}
+  {% if field.type === 'text' %}
+    {{ govukInput({ ... }) }}
+  {% elif field.type === 'textarea' %}
+    {{ govukTextarea({ ... }) }}
+  {% elif field.type === 'radio' %}
+    {{ govukRadios({ ... }) }}
+  {% elif field.type === 'checkboxes' %}
+    {{ govukCheckboxes({ ... }) }}
+  {% elif field.type === 'select' %}
+    {{ govukSelect({ ... }) }}
+  {% elif field.type === 'date' %}
+    {{ govukDateInput({ ... }) }}
+  {% endif %}
+{% endmacro %}
+```
+
+**Features:**
+- Automatic population from `fieldValue`
+- Error message display from `fieldError`
+- Hint text support
+- Pre-selection of previously entered values
+- GOV.UK accessibility standards compliance
+
+## Data Flow Example
+
+### User Journey: Step Navigation
+
+1. **User visits Step 1**
+   ```
+   GET /dynamic-forms/legal-aid-application?step=1
+   ```
+
+2. **Controller processes request:**
+   - Loads JSON config
+   - Parses step number (1)
+   - Retrieves step config from `steps[0]`
+   - Checks session for existing data
+   - Renders `wizard-step.njk` with step data
+
+3. **User fills form and clicks "Save and continue"**
+   ```
+   POST /dynamic-forms/legal-aid-application?step=1
+   action=next
+   full_name=John Smith
+   ```
+
+4. **Controller processes submission:**
+   - Validates required fields
+   - Stores data in session: `wizardForm_legal-aid-application_step_1`
+   - Checks conditional navigation rules
+   - Determines next step (2 or conditional target)
+   - Redirects: `302 → /dynamic-forms/legal-aid-application?step=2`
+
+5. **Template renders:**
+   - `wizard-step.njk` loops through `formConfig`
+   - Calls `renderFormField` macro for each field
+   - Macro selects appropriate GOV.UK component
+   - Pre-fills values from session data
+
+### Conditional Navigation Example
+
+Given this config:
+```json
+"conditionalNavigation": {
+  "applying_for_other": {
+    "Yes": "representative_details",
+    "No": "contact_details"
+  }
+}
+```
+
+**Flow:**
+1. User selects "Yes" on "applying_for_other" field
+2. `determineNextStep()` checks field value against navigation map
+3. Finds match: `"Yes" → "representative_details"`
+4. `findStepIndexById()` locates step with id "representative_details"
+5. Redirects to that step instead of sequential next step
+
+## Session Management
+
+Form data is stored across steps using Express sessions:
+
+```typescript
+// Store step data
+storeSessionData(req, `wizardForm_${formId}_step_${stepNumber}`, data)
+
+// Retrieve step data
+getSessionData(req, `wizardForm_${formId}_step_${stepNumber}`)
+
+// On final submission, consolidate all steps
+consolidateFormData(req, formId, totalSteps)
+```
+
+## Validation
+
+Server-side validation ensures data quality:
+
+**Required Field Validation:**
+- Checks if required fields have values
+- Special handling for date fields (day/month/year)
+- Generates error messages and summary
+
+**Error Display:**
+- GOV.UK error summary at top of page
+- Inline error messages on individual fields
+- Accessible error links to problematic fields
 
 ## Get Started
+
 ### Prerequisites
 
 - node stable version [24.10.0](https://nodejs.org/en/blog/release/v24.10.0/)
@@ -37,7 +381,8 @@ This project uses Yarn 4.9.2 managed by corepack (built into Node.js 16.10+). To
    # Should output: 4.9.2
    ```
 
-**To Note:** 
+**To Note:**
+
 - Corepack automatically uses the Yarn version specified in the `packageManager` field of `package.json`. No additional setup is required once corepack is enabled
 - Corepack is the preferred `yarn` way, to install the package manager, instead of `npm install -g yarn` in your ci/cd pipeline
 - `yarn install --immutable` ensures that the lockfile (`yarn.lock`) is not modified during the installation process
@@ -69,9 +414,10 @@ yarn build
 yarn dev
 ```
 
-Then, load http://localhost:3000/ in your browser to access the app.
+Then, load <http://localhost:3000/> in your browser to access the app.
 
 #### Install dependencies and run application for production
+
 ```shell
 yarn install
 yarn build
@@ -101,23 +447,45 @@ Prerequisites, Docker Desktop
   ```shell
   docker run -d -p 8888:3000 your-repo-name:latest
   ```
-  (The application should be running at http://localhost:8888)
+
+  (The application should be running at <http://localhost:8888>)
 
 - To stop the container
 
   obtain the container id
+
   ```shell
   docker ps
   ```
+
   stop the container
+
   ```shell
   docker stop {container_id}
   ```
 
-### GitHub Actions
-- These have been disabled in this GitHub template repo. Make sure you enable them when setting up your project. 
+## Creating a New Form
 
-### Licence
+1. **Create JSON configuration** in `src/config/your-form.json`
+2. **Update controller** to load your configuration
+3. **Add route** in `routes/index.ts`
+4. **Test** the wizard flow
+
+Example configuration structure available in `src/config/ccq.json` and `src/config/cla_public.json`.
+
+## Testing
+
+Run the test suite:
+
+```shell
+yarn test
+```
+
+## GitHub Actions
+
+- These have been disabled in this GitHub template repo. Make sure you enable them when setting up your project.
+
+## Licence
 
 [Licence](./LICENSE)
 

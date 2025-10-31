@@ -4,6 +4,7 @@
 
 import type { Response } from 'express';
 import type { FormField, WizardForm, WizardStep } from '../types/form-types.js';
+import { hasProperty } from '../helpers/dataTransformers.js';
 
 // Constants for wizard navigation
 export const DEFAULT_STEP = 1;
@@ -42,17 +43,59 @@ interface ConditionalNavigationParams extends NavigationParams {
 }
 
 /**
+ * Get value to check from field value (handles arrays)
+ * @param {string | string[]} fieldValue - Field value
+ * @returns {string} Value to check
+ */
+function getValueToCheck(fieldValue: string | string[]): string {
+  const firstArrayIndex = 0;
+  return Array.isArray(fieldValue) ? fieldValue[firstArrayIndex] : fieldValue;
+}
+
+/**
+ * Check if a navigation target is valid
+ * @param {unknown} target - Target to validate
+ * @returns {string | null} Valid target or null
+ */
+function getValidNavigationTarget(target: unknown): string | null {
+  return typeof target === 'string' && target !== '' ? target : null;
+}
+
+/**
+ * Find matching navigation target in navigation map
+ * @param {Record<string, string>} navigationMap - Navigation map
+ * @param {string} valueToCheck - Value to match
+ * @returns {string | null} Target step or null
+ */
+function findNavigationTarget(
+  navigationMap: Record<string, string>,
+  valueToCheck: string
+): string | null {
+  // Check for exact match
+  if (hasProperty(navigationMap, valueToCheck)) {
+    const { [valueToCheck]: targetStep } = navigationMap;
+    return getValidNavigationTarget(targetStep);
+  }
+
+  // Check for default fallback
+  if (hasProperty(navigationMap, 'default')) {
+    const { default: defaultStep } = navigationMap;
+    return getValidNavigationTarget(defaultStep);
+  }
+
+  return null;
+}
+
+/**
  * Determine the next step based on conditional logic
  * @param {WizardStep} currentStep - Current wizard step
  * @param {Record<string, string | string[]>} formData - Current form data
  * @returns {string | null} Next step ID or null for sequential navigation
  */
 export function determineNextStep(
-  currentStep: WizardStep, 
+  currentStep: WizardStep,
   formData: Record<string, string | string[]>
 ): string | null {
-  const firstArrayIndex = 0;
-  
   // Return null if no conditional navigation is defined
   if (currentStep.conditionalNavigation === undefined) {
     return null;
@@ -60,32 +103,25 @@ export function determineNextStep(
 
   // Check each field's conditional navigation
   for (const [fieldName, navigationMap] of Object.entries(currentStep.conditionalNavigation)) {
-    const { [fieldName]: fieldValue } = formData;
-    
-    // Skip if no value provided
-    // eslint-disable-next-line @typescript-eslint/prefer-nullish-coalescing
-    if (fieldValue === undefined || fieldValue === '') {
+    // Skip if field not present or empty
+    if (!hasProperty(formData, fieldName)) {
       continue;
     }
 
-    // Get the value to check (first item if array)
-    const valueToCheck = Array.isArray(fieldValue) ? fieldValue[firstArrayIndex] : fieldValue;
-    
-    // Check for exact match in navigation map
-    const { [valueToCheck]: targetStep } = navigationMap;
-    // eslint-disable-next-line @typescript-eslint/prefer-nullish-coalescing
-    if (targetStep !== undefined && targetStep !== '') {
-      return targetStep;
+    const { [fieldName]: fieldValue } = formData;
+    if (fieldValue === '') {
+      continue;
     }
-    
-    // Check for default fallback
-    const { default: defaultStep } = navigationMap;
-    // eslint-disable-next-line @typescript-eslint/prefer-nullish-coalescing
-    if (defaultStep !== undefined && defaultStep !== '') {
-      return defaultStep;
+
+    // Find navigation target based on field value
+    const valueToCheck = getValueToCheck(fieldValue);
+    const target = findNavigationTarget(navigationMap, valueToCheck);
+
+    if (target !== null) {
+      return target;
     }
   }
-  
+
   return null;
 }
 
@@ -109,24 +145,24 @@ export function findStepIndexById(steps: WizardStep[], stepId: string): number {
  */
 export function handleFormNavigation(params: NavigationParams, res: Response): void {
   const { action, stepNumber, formId, totalSteps } = params;
-  
+
   if (action === 'previous' && stepNumber > DEFAULT_STEP) {
     const previousStep = stepNumber - DEFAULT_STEP;
     res.redirect(`/dynamic-forms/${formId}?step=${previousStep}`);
     return;
   }
-  
+
   if (action === 'next' && stepNumber < totalSteps) {
     const nextStep = stepNumber + DEFAULT_STEP;
     res.redirect(`/dynamic-forms/${formId}?step=${nextStep}`);
     return;
   }
-  
+
   if (action === 'submit' && stepNumber === totalSteps) {
     res.redirect(`/dynamic-forms/${formId}/success`);
     return;
   }
-  
+
   // Default: redirect to current step
   res.redirect(`/dynamic-forms/${formId}?step=${stepNumber}`);
 }
@@ -152,9 +188,9 @@ function navigateToPrevious(stepNumber: number, formId: string, res: Response): 
 function navigateToNext(params: ConditionalNavigationParams, res: Response): void {
   const { stepNumber, formId, totalSteps, currentStep, allSteps, formData } = params;
   const minValidStep = 0;
-  
+
   const nextStepId = determineNextStep(currentStep, formData);
-  
+
   if (nextStepId !== null && nextStepId !== '') {
     const nextStepNumber = findStepIndexById(allSteps, nextStepId);
     if (nextStepNumber > minValidStep) {
@@ -162,7 +198,7 @@ function navigateToNext(params: ConditionalNavigationParams, res: Response): voi
       return;
     }
   }
-  
+
   if (stepNumber < totalSteps) {
     const nextStep = stepNumber + DEFAULT_STEP;
     res.redirect(`/dynamic-forms/${formId}?step=${nextStep}`);
@@ -176,9 +212,9 @@ function navigateToNext(params: ConditionalNavigationParams, res: Response): voi
  */
 function handleSubmit(params: ConditionalNavigationParams, res: Response): void {
   const { stepNumber, formId, totalSteps, currentStep } = params;
-  
+
   const isTerminal = (currentStep.isTerminalStep === true) || (currentStep.isUrgentStep === true);
-  
+
   if (isTerminal || stepNumber === totalSteps) {
     res.redirect(`/dynamic-forms/${formId}/success`);
   }
@@ -191,7 +227,7 @@ function handleSubmit(params: ConditionalNavigationParams, res: Response): void 
  */
 export function handleConditionalNavigation(params: ConditionalNavigationParams, res: Response): void {
   const { action, stepNumber, formId } = params;
-  
+
   switch (action) {
     case 'previous': {
       navigateToPrevious(stepNumber, formId, res);
