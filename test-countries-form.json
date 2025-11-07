@@ -1,0 +1,37 @@
+{
+  "name": "Test Countries Form",
+  "steps": [
+    {
+      "id": "select-country",
+      "heading": "Select a Country",
+      "description": "Choose a country from the list",
+      "fields": [
+        {
+          "type": "select",
+          "name": "country",
+          "question": "Which country are you from?",
+          "hint": "Select your country from the dropdown",
+          "useApiOptions": true,
+          "apiConfig": {
+            "endpoint": "/all",
+            "params": "fields=name",
+            "valuePath": "name.common",
+            "labelPath": "name.common"
+          }
+        }
+      ]
+    },
+    {
+      "id": "confirmation",
+      "heading": "Confirmation",
+      "description": "Review your selection",
+      "fields": [
+        {
+          "type": "text",
+          "name": "notes",
+          "question": "Any additional notes?"
+        }
+      ]
+    }
+  ]
+}

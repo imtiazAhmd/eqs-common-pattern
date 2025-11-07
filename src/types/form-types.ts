@@ -3,16 +3,37 @@
  */
 
 /**
+ * Option item with value and text for select/radio/checkbox fields
+ */
+export interface OptionItem {
+  value: string;
+  text: string;
+}
+
+/**
+ * API configuration for dynamic options
+ */
+export interface ApiOptionsConfig {
+  endpoint: string; // API endpoint path (e.g., /all)
+  params?: string; // Query parameters as string (e.g., fields=name&status=active)
+  dataPath?: string; // Optional dot notation path to array in response (e.g., results, data.items)
+  valuePath: string; // Dot notation path to value in response (e.g., name.common)
+  labelPath: string; // Dot notation path to label in response (e.g., name.common)
+}
+
+/**
  * Base form field interface
  */
 export interface FormField {
   question: string;
   type: 'radio' | 'checkboxes' | 'text' | 'textarea' | 'date' | 'select';
-  available_options?: string[];
+  available_options?: Array<string | OptionItem>;
   required?: boolean;
   validation_rules?: string[];
   hint?: string;
   name?: string;
+  useApiOptions?: boolean; // Whether to fetch options from API
+  apiConfig?: ApiOptionsConfig; // API configuration for fetching options
 }
 
 /**

@@ -20,9 +20,10 @@ import {
 } from '../helpers/dataTransformers.js';
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
+import { getFieldOptions } from '../services/apiOptionsService.js';
 
 // Load wizard form configuration from JSON
-const FORM_CONFIG_PATH = join(process.cwd(), 'src', 'config', 'test.json');
+const FORM_CONFIG_PATH = join(process.cwd(), 'src', 'config', 'api_test.json');
 
 /**
  * Type guard to check if an unknown value is a WizardForm
@@ -100,15 +101,47 @@ function generateFieldName(question: string): string {
 }
 
 /**
- * Process form configuration to add field names and other properties
+ * Process form configuration to add field names and fetch API options
  * @param {FormField[]} fields - Array of form fields
- * @returns {FormField[]} Processed form fields
+ * @returns {Promise<FormField[]>} Processed form fields with options
  */
-function processFormConfig(fields: FormField[]): FormField[] {
-  return fields.map(field => ({
-    ...field,
-    name: field.name ?? generateFieldName(field.question)
-  }));
+async function processFormConfig(fields: FormField[]): Promise<FormField[]> {
+  const processedFields: FormField[] = [];
+
+  for (const field of fields) {
+    const fieldName = field.name ?? generateFieldName(field.question);
+    let processedField: FormField = {
+      ...field,
+      name: fieldName
+    };
+
+    // Fetch options for select, radio, and checkbox fields
+    if (field.type === 'select' || field.type === 'radio' || field.type === 'checkboxes') {
+      const optionsResult = await getFieldOptions(
+        field.useApiOptions,
+        field.apiConfig,
+        field.available_options
+      );
+
+      if (optionsResult.success) {
+        processedField = {
+          ...processedField,
+          available_options: optionsResult.options
+        };
+      } else if (optionsResult.error !== undefined) {
+        // Add error information to the field for display
+        processedField = {
+          ...processedField,
+          hint: optionsResult.error,
+          available_options: []
+        };
+      }
+    }
+
+    processedFields.push(processedField);
+  }
+
+  return processedFields;
 }
 
 /**
@@ -239,66 +272,77 @@ function validateStepData(config: FormField[], data: Record<string, string | str
  * @param {NextFunction} next - Express next function
  */
 export function getDynamicForm(req: RequestWithCSRF, res: Response, next: NextFunction): void {
-  try {
-    if (!hasFormId(req.params)) {
-      res.status(HTTP_STATUS_BAD_REQUEST).render('error', {
-        message: 'Invalid form ID',
-        error: { status: HTTP_STATUS_BAD_REQUEST }
+  void (async () => {
+    try {
+      if (!hasFormId(req.params)) {
+        res.status(HTTP_STATUS_BAD_REQUEST).render('error', {
+          message: 'Invalid form ID',
+          error: { status: HTTP_STATUS_BAD_REQUEST }
+        });
+        return;
+      }
+
+      const { params: { formId } } = req;
+
+      // Only accept the legal-aid-application form ID
+      if (formId !== 'legal-aid-application') {
+        res.status(HTTP_STATUS_NOT_FOUND).render('error', {
+          message: 'Form not found',
+          error: { status: HTTP_STATUS_NOT_FOUND }
+        });
+        return;
+      }
+
+      const wizardForm = WIZARD_FORM_CONFIG;
+      const stepNumber = parseStepParameter(req.query.step);
+      const currentStepIndex = stepNumber - DEFAULT_STEP;
+
+      // Validate step number
+      if (currentStepIndex < FIRST_STEP_INDEX || currentStepIndex >= wizardForm.steps.length) {
+        res.status(HTTP_STATUS_BAD_REQUEST).render('error', {
+          message: 'Invalid step number',
+          error: { status: HTTP_STATUS_BAD_REQUEST }
+        });
+        return;
+      }
+
+      const [currentStep] = wizardForm.steps.slice(currentStepIndex, currentStepIndex + SINGLE_ITEM_SLICE);
+      const processedFields = await processFormConfig(currentStep.fields);
+      
+      // Debug: Log processed fields to see the options structure
+      const JSON_INDENT = 2;
+      console.log('[DEBUG] Processed fields:', JSON.stringify(processedFields.map(f => ({
+        name: f.name,
+        type: f.type,
+        options: f.available_options
+      })), null, JSON_INDENT));
+      
+      const csrfToken = typeof req.csrfToken === 'function' ? req.csrfToken() : undefined;
+
+      // Get any existing form data from session
+      const sessionData = getSessionData(req, `wizardForm_${formId}`) ?? {};
+
+      res.render('dynamic-forms/wizard-step', {
+        formId,
+        formTitle: wizardForm.title,
+        formDescription: wizardForm.description,
+        currentStep: stepNumber,
+        totalSteps: wizardForm.steps.length,
+        stepTitle: currentStep.title,
+        stepDescription: currentStep.description,
+        formConfig: processedFields,
+        formData: sessionData,
+        csrfToken,
+        error: null,
+        isFirstStep: stepNumber === DEFAULT_STEP,
+        isLastStep: stepNumber === wizardForm.steps.length,
+        isTerminalStep: currentStep.isTerminalStep === true,
+        isUrgentStep: currentStep.isUrgentStep === true
       });
-      return;
+    } catch (error) {
+      next(error);
     }
-
-    const { params: { formId } } = req;
-
-    // Only accept the legal-aid-application form ID
-    if (formId !== 'legal-aid-application') {
-      res.status(HTTP_STATUS_NOT_FOUND).render('error', {
-        message: 'Form not found',
-        error: { status: HTTP_STATUS_NOT_FOUND }
-      });
-      return;
-    }
-
-    const wizardForm = WIZARD_FORM_CONFIG;
-    const stepNumber = parseStepParameter(req.query.step);
-    const currentStepIndex = stepNumber - DEFAULT_STEP;
-
-    // Validate step number
-    if (currentStepIndex < FIRST_STEP_INDEX || currentStepIndex >= wizardForm.steps.length) {
-      res.status(HTTP_STATUS_BAD_REQUEST).render('error', {
-        message: 'Invalid step number',
-        error: { status: HTTP_STATUS_BAD_REQUEST }
-      });
-      return;
-    }
-
-    const [currentStep] = wizardForm.steps.slice(currentStepIndex, currentStepIndex + SINGLE_ITEM_SLICE);
-    const processedFields = processFormConfig(currentStep.fields);
-    const csrfToken = typeof req.csrfToken === 'function' ? req.csrfToken() : undefined;
-
-    // Get any existing form data from session
-    const sessionData = getSessionData(req, `wizardForm_${formId}`) ?? {};
-
-    res.render('dynamic-forms/wizard-step', {
-      formId,
-      formTitle: wizardForm.title,
-      formDescription: wizardForm.description,
-      currentStep: stepNumber,
-      totalSteps: wizardForm.steps.length,
-      stepTitle: currentStep.title,
-      stepDescription: currentStep.description,
-      formConfig: processedFields,
-      formData: sessionData,
-      csrfToken,
-      error: null,
-      isFirstStep: stepNumber === DEFAULT_STEP,
-      isLastStep: stepNumber === wizardForm.steps.length,
-      isTerminalStep: currentStep.isTerminalStep === true,
-      isUrgentStep: currentStep.isUrgentStep === true
-    });
-  } catch (error) {
-    next(error);
-  }
+  })();
 }
 
 /**
@@ -547,66 +591,68 @@ function consolidateFormData(req: RequestWithCSRF, formId: string, totalSteps: n
  * @param {NextFunction} next - Express next function
  */
 export function postDynamicForm(req: RequestWithCSRF, res: Response, next: NextFunction): void {
-  try {
-    const formId = validateFormRequest(req, res);
-    if (formId === null) return;
+  void (async () => {
+    try {
+      const formId = validateFormRequest(req, res);
+      if (formId === null) return;
 
-    const wizardForm = WIZARD_FORM_CONFIG;
-    const stepNumber = parseStepParameter(req.query.step);
+      const wizardForm = WIZARD_FORM_CONFIG;
+      const stepNumber = parseStepParameter(req.query.step);
 
-    const currentStep = validateAndGetCurrentStep(wizardForm, stepNumber, res);
-    if (currentStep === null) return;
+      const currentStep = validateAndGetCurrentStep(wizardForm, stepNumber, res);
+      if (currentStep === null) return;
 
-    const processedFields = processFormConfig(currentStep.fields);
-    const formData = extractAndConvertFormData(req.body, processedFields);
-    const { errors, errorSummaryList } = validateStepData(processedFields, formData);
-    const hasValidationErrors = Object.keys(errors).length > EMPTY_ARRAY_LENGTH;
+      const processedFields = await processFormConfig(currentStep.fields);
+      const formData = extractAndConvertFormData(req.body, processedFields);
+      const { errors, errorSummaryList } = validateStepData(processedFields, formData);
+      const hasValidationErrors = Object.keys(errors).length > EMPTY_ARRAY_LENGTH;
 
-    // Handle validation errors
-    if (hasValidationErrors) {
-      const csrfToken = typeof req.csrfToken === 'function' ? req.csrfToken() : undefined;
-      renderStepWithErrors({
-        res,
-        formId,
-        wizardForm,
-        currentStep,
+      // Handle validation errors
+      if (hasValidationErrors) {
+        const csrfToken = typeof req.csrfToken === 'function' ? req.csrfToken() : undefined;
+        renderStepWithErrors({
+          res,
+          formId,
+          wizardForm,
+          currentStep,
+          stepNumber,
+          processedFields,
+          formData,
+          csrfToken,
+          errors,
+          errorSummaryList
+        });
+        return;
+      }
+
+      // Store form data using sessionHelpers
+      const sessionData = convertFormDataForSession(formData);
+      storeSessionData(req, `wizardForm_${formId}_step_${stepNumber}`, sessionData);
+
+      // Extract action safely from request body
+      const { action: actionValue } = isRecord(req.body) ? req.body : { action: undefined };
+      const action = typeof actionValue === 'string' ? actionValue : '';
+
+      // If this is the final step and submitting, consolidate all step data
+      if (action === 'submit' && stepNumber === wizardForm.steps.length) {
+        consolidateFormData(req, formId, wizardForm.steps.length);
+      }
+
+      // Use conditional navigation for enhanced wizard flow
+      handleConditionalNavigation({
+        action,
         stepNumber,
-        processedFields,
-        formData,
-        csrfToken,
-        errors,
-        errorSummaryList
-      });
-      return;
+        formId,
+        totalSteps: wizardForm.steps.length,
+        currentStep,
+        allSteps: wizardForm.steps,
+        formData
+      }, res);
+
+    } catch (error) {
+      next(error);
     }
-
-    // Store form data using sessionHelpers
-    const sessionData = convertFormDataForSession(formData);
-    storeSessionData(req, `wizardForm_${formId}_step_${stepNumber}`, sessionData);
-
-    // Extract action safely from request body
-    const { action: actionValue } = isRecord(req.body) ? req.body : { action: undefined };
-    const action = typeof actionValue === 'string' ? actionValue : '';
-
-    // If this is the final step and submitting, consolidate all step data
-    if (action === 'submit' && stepNumber === wizardForm.steps.length) {
-      consolidateFormData(req, formId, wizardForm.steps.length);
-    }
-
-    // Use conditional navigation for enhanced wizard flow
-    handleConditionalNavigation({
-      action,
-      stepNumber,
-      formId,
-      totalSteps: wizardForm.steps.length,
-      currentStep,
-      allSteps: wizardForm.steps,
-      formData
-    }, res);
-
-  } catch (error) {
-    next(error);
-  }
+  })();
 }
 
 /**

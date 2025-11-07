@@ -56,6 +56,76 @@ function validateBasicFormStructure(data: unknown, errors: string[]): data is Re
 }
 
 /**
+ * Validate API config property
+ * @param {Record<string, unknown>} apiConfig - API configuration object
+ * @param {string} propName - Property name to validate
+ * @param {object} errorContext - Error context
+ * @param {number} errorContext.stepNum - Step number for error messages
+ * @param {number} errorContext.fieldNum - Field number for error messages
+ * @param {string[]} errors - Array to collect errors
+ */
+function validateApiConfigProperty(
+  apiConfig: Record<string, unknown>,
+  propName: string,
+  errorContext: { stepNum: number; fieldNum: number },
+  errors: string[]
+): void {
+  if (!hasProperty(apiConfig, propName) || 
+      typeof apiConfig[propName] !== 'string' || 
+      apiConfig[propName].trim() === '') {
+    errors.push(`Step ${errorContext.stepNum}, Field ${errorContext.fieldNum}: apiConfig.${propName} is required`);
+  }
+}
+
+/**
+ * Validate API options configuration
+ * @param {Record<string, unknown>} field - Field object
+ * @param {number} stepNum - Step number for error messages
+ * @param {number} fieldNum - Field number for error messages
+ * @param {string[]} errors - Array to collect errors
+ */
+function validateApiConfig(field: Record<string, unknown>, stepNum: number, fieldNum: number, errors: string[]): void {
+  if (!hasProperty(field, 'apiConfig') || !isRecord(field.apiConfig)) {
+    errors.push(`Step ${stepNum}, Field ${fieldNum}: apiConfig is required when useApiOptions is true`);
+    return;
+  }
+
+  const { apiConfig } = field;
+  const errorContext = { stepNum, fieldNum };
+  validateApiConfigProperty(apiConfig, 'endpoint', errorContext, errors);
+  validateApiConfigProperty(apiConfig, 'valuePath', errorContext, errors);
+  validateApiConfigProperty(apiConfig, 'labelPath', errorContext, errors);
+}
+
+/**
+ * Validate a single field
+ * @param {unknown} field - Field to validate
+ * @param {number} stepNum - Step number for error messages
+ * @param {number} fieldNum - Field number for error messages
+ * @param {string[]} errors - Array to collect errors
+ */
+/**
+ * Validate field basic properties
+ * @param {Record<string, unknown>} field - Field object
+ * @param {number} stepNum - Step number for error messages
+ * @param {number} fieldNum - Field number for error messages
+ * @param {string[]} errors - Array to collect errors
+ */
+function validateFieldBasicProps(field: Record<string, unknown>, stepNum: number, fieldNum: number, errors: string[]): void {
+  if (!hasProperty(field, 'question') || typeof field.question !== 'string' || field.question.trim() === '') {
+    errors.push(`Step ${stepNum}, Field ${fieldNum}: question is required`);
+  }
+
+  if (!hasProperty(field, 'type') || typeof field.type !== 'string') {
+    errors.push(`Step ${stepNum}, Field ${fieldNum}: type is required`);
+  }
+
+  if (!hasProperty(field, 'name') || typeof field.name !== 'string' || field.name.trim() === '') {
+    errors.push(`Step ${stepNum}, Field ${fieldNum}: name is required`);
+  }
+}
+
+/**
  * Validate a single field
  * @param {unknown} field - Field to validate
  * @param {number} stepNum - Step number for error messages
@@ -68,16 +138,11 @@ function validateField(field: unknown, stepNum: number, fieldNum: number, errors
     return;
   }
 
-  if (!hasProperty(field, 'question') || typeof field.question !== 'string' || field.question.trim() === '') {
-    errors.push(`Step ${stepNum}, Field ${fieldNum}: question is required`);
-  }
+  validateFieldBasicProps(field, stepNum, fieldNum, errors);
 
-  if (!hasProperty(field, 'type') || typeof field.type !== 'string') {
-    errors.push(`Step ${stepNum}, Field ${fieldNum}: type is required`);
-  }
-
-  if (!hasProperty(field, 'name') || typeof field.name !== 'string' || field.name.trim() === '') {
-    errors.push(`Step ${stepNum}, Field ${fieldNum}: name is required`);
+  // Validate API options configuration
+  if (hasProperty(field, 'useApiOptions') && field.useApiOptions === true) {
+    validateApiConfig(field, stepNum, fieldNum, errors);
   }
 }
 
