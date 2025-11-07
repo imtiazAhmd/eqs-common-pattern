@@ -75,10 +75,8 @@
           {% elif field.type == "radio" %}
             {% set radioItems = [] %}
             {% for option in field.available_options %}
-              {% set optionValue = option.value if option.value else
-                option %}
-              {% set optionText = option.text if option.text else
-                option %}
+              {% set optionValue = option['value'] if option['value'] != undefined else option %}
+              {% set optionText = option['text'] if option['text'] != undefined else option %}
               {% set radioItems = (radioItems.push({
                 value: optionValue,
                 text: optionText,
@@ -106,10 +104,8 @@
           {% elif field.type == "checkboxes" %}
             {% set checkboxItems = [] %}
             {% for option in field.available_options %}
-              {% set optionValue = option.value if option.value else
-                option %}
-              {% set optionText = option.text if option.text else
-                option %}
+              {% set optionValue = option['value'] if option['value'] != undefined else option %}
+              {% set optionText = option['text'] if option['text'] != undefined else option %}
               {% set checkboxItems = (checkboxItems.push({
                 value: optionValue,
                 text: optionText,
@@ -143,10 +139,8 @@
               }
             ] %}
             {% for option in field.available_options %}
-              {% set optionValue = option.value if option.value else 
-                option %}
-              {% set optionText = option.text if option.text else 
-                option %}
+              {% set optionValue = option['value'] if option['value'] != undefined else option %}
+              {% set optionText = option['text'] if option['text'] != undefined else option %}
               {% set selectItems = (selectItems.push({
                 value: optionValue,
                 text: optionText,

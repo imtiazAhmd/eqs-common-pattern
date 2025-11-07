@@ -47,11 +47,13 @@
   {% elif field.type === 'radio' %}
     {% set radioItems = [] %}
     {% for option in field.available_options %}
+      {% set optionValue = option.value if (option.value !== undefined and option.value !== null) else option %}
+      {% set optionText = option.text if (option.text !== undefined and option.text !== null) else option %}
       {% set radioItems = radioItems.concat([
         {
-          value: option,
-          text: option,
-          checked: fieldValue === option
+          value: optionValue,
+          text: optionText,
+          checked: fieldValue === optionValue
         }
       ]) %}
     {% endfor %}
@@ -76,14 +78,16 @@
   {% elif field.type === 'checkboxes' %}
     {% set checkboxItems = [] %}
     {% for option in field.available_options %}
-      {% set isChecked = fieldValue and(fieldValue.includes(option) if (fieldValue is iterable and fieldValue is not string) 
+      {% set optionValue = option.value if (option.value !== undefined and option.value !== null) else option %}
+      {% set optionText = option.text if (option.text !== undefined and option.text !== null) else option %}
+      {% set isChecked = fieldValue and(fieldValue.includes(optionValue) if (fieldValue is iterable and fieldValue is not string) 
         else
-          fieldValue === option
+          fieldValue === optionValue
       ) %}
       {% set checkboxItems = checkboxItems.concat([
         {
-          value: option,
-          text: option,
+          value: optionValue,
+          text: optionText,
           checked: isChecked
         }
       ]) %}
@@ -114,11 +118,13 @@
       }
     ] %}
     {% for option in field.available_options %}
+      {% set optionValue = option.value if (option.value !== undefined and option.value !== null) else option %}
+      {% set optionText = option.text if (option.text !== undefined and option.text !== null) else option %}
       {% set selectItems = selectItems.concat([
         {
-          value: option,
-          text: option,
-          selected: fieldValue === option
+          value: optionValue,
+          text: optionText,
+          selected: fieldValue === optionValue
         }
       ]) %}
     {% endfor %}
