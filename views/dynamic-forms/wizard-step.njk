@@ -21,47 +21,6 @@
       <div class="govuk-grid-row">
         <div class="govuk-grid-column-two-thirds">
 
-          <!-- Progress indicator -->
-          <div class="govuk-!-margin-bottom-6">
-            <p class="govuk-body-s govuk-!-margin-bottom-2">
-            Step {{ currentStep }} of {{ totalSteps }}
-            </p>
-            <div class="govuk-progress-bar" style="width: 100%; height: 8px; background-color: #f3f2f1; border-radius: 4px;">
-              <div style="width: {{ (currentStep / totalSteps) * 100 }}%; height: 100%; background-color: #1d70b8; border-radius: 4px;"></div>
-            </div>
-          </div>
-
-          <h1 class="govuk-heading-xl">{{ stepTitle }}</h1>
-
-          {% if stepDescription %}
-            <p class="govuk-body-l">{{ stepDescription }}</p>
-          {% endif %}
-
-          {% if isUrgentStep %}
-            <div class="govuk-warning-text">
-              <span class="govuk-warning-text__icon" aria-hidden="true">!</span>
-              <strong class="govuk-warning-text__text">
-                <span class="govuk-warning-text__assistive">Warning</span>
-                This is an urgent matter requiring immediate attention.
-              </strong>
-            </div>
-          {% endif %}
-
-          {% if isTerminalStep %}
-            <div class="govuk-notification-banner" role="region" aria-labelledby="govuk-notification-banner-title" data-module="govuk-notification-banner">
-              <div class="govuk-notification-banner__header">
-                <h2 class="govuk-notification-banner__title" id="govuk-notification-banner-title">
-                  Important
-                </h2>
-              </div>
-              <div class="govuk-notification-banner__content">
-                <p class="govuk-notification-banner__heading">
-                  You cannot continue with this application at this time.
-                </p>
-              </div>
-            </div>
-          {% endif %}
-
           <form method="post" action="/dynamic-forms/{{ formId }}?step={{ currentStep }}" novalidate>
             <input type="hidden" name="_csrf" value="{{ csrfToken }}">
 
@@ -74,22 +33,13 @@
             {% endfor %}
 
             <div class="govuk-button-group">
-              {% if not isFirstStep and not isTerminalStep %}
+              {% if not isFirstStep %}
                 <button type="submit" name="action" value="previous" class="govuk-button govuk-button--secondary">
                 Previous
               </button>
               {% endif %}
 
-              {% if isTerminalStep %}
-                <!-- Terminal step - no navigation buttons -->
-                <p class="govuk-body">
-                  <a href="/dynamic-forms" class="govuk-link">Return to form list</a>
-                </p>
-              {% elif isUrgentStep %}
-                <button type="submit" name="action" value="submit" class="govuk-button govuk-button--warning">
-                Submit urgent request
-              </button>
-              {% elif isLastStep %}
+              {% if isLastStep %}
                 <button type="submit" name="action" value="submit" class="govuk-button">
                 Submit application
               </button>

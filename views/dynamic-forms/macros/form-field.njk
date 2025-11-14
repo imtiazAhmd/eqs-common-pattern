@@ -12,11 +12,13 @@
     {{ govukInput({
       label: {
         text: field.question,
-        classes: "govuk-label--m"
+        classes: "govuk-label--xl"
       },
-      hint: {
-        text: field.hint
-      } if field.hint,
+      hint: ({
+        html: field.hint if field.hintHtml,
+        text: field.hint if not field.hintHtml,
+        classes: field.hintClass
+      } if field.hint else undefined),
       id: fieldName,
       name: fieldName,
       value: fieldValue,
@@ -30,11 +32,13 @@
     {{ govukTextarea({
       label: {
         text: field.question,
-        classes: "govuk-label--m"
+        classes: "govuk-label--xl"
       },
-      hint: {
-        text: field.hint
-      } if field.hint,
+      hint: ({
+        html: field.hint if field.hintHtml,
+        text: field.hint if not field.hintHtml,
+        classes: field.hintClass
+      } if field.hint else undefined),
       id: fieldName,
       name: fieldName,
       value: fieldValue,
@@ -63,12 +67,14 @@
       fieldset: {
         legend: {
           text: field.question,
-          classes: "govuk-fieldset__legend--m"
+          classes: "govuk-fieldset__legend--xl"
         }
       },
-      hint: {
-        text: field.hint
-      } if field.hint,
+      hint: ({
+        html: field.hint if field.hintHtml,
+        text: field.hint if not field.hintHtml,
+        classes: field.hintClass
+      } if field.hint else undefined),
       items: radioItems,
       errorMessage: {
         text: fieldError
@@ -98,12 +104,14 @@
       fieldset: {
         legend: {
           text: field.question,
-          classes: "govuk-fieldset__legend--m"
+          classes: "govuk-fieldset__legend--xl"
         }
       },
-      hint: {
-        text: field.hint
-      } if field.hint,
+      hint: ({
+        html: field.hint if field.hintHtml,
+        text: field.hint if not field.hintHtml,
+        classes: field.hintClass
+      } if field.hint else undefined),
       items: checkboxItems,
       errorMessage: {
         text: fieldError
@@ -132,11 +140,13 @@
     {{ govukSelect({
       label: {
         text: field.question,
-        classes: "govuk-label--m"
+        classes: "govuk-label--xl"
       },
-      hint: {
-        text: field.hint
-      } if field.hint,
+      hint: ({
+        html: field.hint if field.hintHtml,
+        text: field.hint if not field.hintHtml,
+        classes: field.hintClass
+      } if field.hint else undefined),
       id: fieldName,
       name: fieldName,
       items: selectItems,
@@ -150,12 +160,14 @@
       fieldset: {
         legend: {
           text: field.question,
-          classes: "govuk-fieldset__legend--m"
+          classes: "govuk-fieldset__legend--xl"
         }
       },
-      hint: {
-        text: field.hint or "For example, 27 3 2007"
-      },
+      hint: ({
+        html: (field.hint or "For example, 27 3 2007") if field.hintHtml,
+        text: (field.hint or "For example, 27 3 2007") if not field.hintHtml,
+        classes: field.hintClass
+      }),
       id: fieldName,
       namePrefix: fieldName,
       errorMessage: {

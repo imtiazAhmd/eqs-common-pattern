@@ -53,8 +53,8 @@ export interface StepBuilderDTO {
   description?: string;
   fields: FormField[];
   conditionalNavigation?: Record<string, Record<string, string>>;
-  isTerminalStep?: boolean;
-  isUrgentStep?: boolean;
+  isTerminationStep?: boolean;
+  buttonText?: string;
 }
 
 /**

@@ -29,8 +29,10 @@ For questions or more information, contact: [imtiaz.ahmed@justice.gov.uk](mailto
 ## Features
 
 - **JSON-Driven Configuration**: Define entire multi-step forms in JSON
-- **Conditional Navigation**: Dynamic step routing based on user responses
-- **Terminal Steps**: Support for early wizard termination (e.g., eligibility failures)
+- **Global Conditional Navigation**: Advanced multi-step routing based on answers from any previous step
+- **Step-Level Conditional Navigation**: Dynamic routing based on current step responses
+- **Termination Steps**: Support for early wizard termination with custom messages (e.g., eligibility failures)
+- **Intelligent Rule Evaluation**: Automatic prioritization of navigation rules for optimal routing
 - **Urgent Steps**: Flag steps requiring immediate attention
 - **Type-Safe**: Full TypeScript support with validated types
 - **GOV.UK Design System**: Built-in integration with all GDS components
@@ -93,7 +95,11 @@ Define your wizard form structure:
 
 **Conditional Navigation:**
 
-Define step routing based on field values:
+The system supports two types of conditional navigation:
+
+##### 1. Step-Level Conditional Navigation (Deprecated)
+
+Define routing based on the current step's field values:
 
 ```json
 "conditionalNavigation": {
@@ -105,8 +111,60 @@ Define step routing based on field values:
 }
 ```
 
+##### 2. Global Conditional Navigation (Recommended)
+
+Define routing based on answers from ANY previous step. This enables complex eligibility checks across multiple steps:
+
+```json
+"globalConditionalNavigation": [
+  {
+    "id": "unique_rule_id",
+    "conditions": [
+      {
+        "stepId": "step_client_age",
+        "fieldName": "client_age",
+        "value": "Under 18"
+      },
+      {
+        "stepId": "step_level_of_help",
+        "fieldName": "level_of_help",
+        "value": "civil_certificated_work"
+      }
+    ],
+    "targetStepId": "step_no_mean_assessment"
+  }
+]
+```
+
+**Global Navigation Features:**
+- **Multi-step conditions**: Evaluate answers from any combination of previous steps
+- **AND logic**: All conditions must match for the rule to trigger
+- **Intelligent prioritization**: Rules are automatically sorted to evaluate more specific rules first
+- **No ordering required**: Rules can be defined in any order in the JSON - the system will evaluate them optimally
+
+**How Rule Prioritization Works:**
+
+The system automatically sorts rules based on which steps they reference:
+- Rules checking later steps (e.g., step 4) are evaluated first
+- Rules checking earlier steps (e.g., steps 1-2) are evaluated last
+- This ensures the most specific/relevant rule always matches first
+
+Example: Even if rules are defined in this order in JSON:
+1. Rule checking steps 1-2
+2. Rule checking steps 1-2-4
+
+The system will evaluate them in this order:
+1. Rule checking steps 1-2-4 (more specific)
+2. Rule checking steps 1-2 (less specific)
+
 **Special Step Types:**
-- `isTerminalStep: true` - Ends the wizard (e.g., user not eligible)
+
+- `isTerminationStep: true` - Ends the wizard with a custom message (e.g., user not eligible). Termination steps:
+  - Display custom title and description with HTML support
+  - Show a single button (customizable text)
+  - Can only be reached via global conditional navigation
+  - Prevent further navigation through the wizard
+  - Post to the success page to show final results
 - `isUrgentStep: true` - Flags urgent matters requiring immediate action
 
 #### 2. Controller (`src/controllers/dynamicFormController.ts`)
@@ -114,11 +172,13 @@ Define step routing based on field values:
 The controller orchestrates the entire form flow:
 
 **Key Responsibilities:**
+
 - Load and validate JSON configuration
 - Handle GET requests to render form steps
 - Process POST submissions and validate data
 - Manage session storage for multi-step data
-- Coordinate navigation between steps
+- Coordinate navigation between steps (including global conditional navigation)
+- Handle termination steps and success page rendering
 
 **Main Functions:**
 
@@ -152,17 +212,34 @@ export function getFormSuccess(req, res, next)
    - Determine next step (conditional or sequential)
    - Redirect to appropriate step or success page
 
-#### 3. Helper Functions (`src/controllers/wizardFormHelpers.ts`)
+#### 3. Helper Functions
 
-Modular utilities for common wizard operations:
+**Navigation Helpers (`src/controllers/navigationHelpers.ts`):**
 
-**Navigation Helpers:**
+```typescript
+// Track visited steps for back navigation
+trackVisitedStep(req, formId, stepNumber): void
+
+// Get consolidated form data from all visited steps
+getConsolidatedFormData(req, formId, currentStepNumber): Record<string, string>
+
+// Process global navigation and redirect if rule matches
+processGlobalNavigation(params): boolean
+
+// Handle wizard navigation with global rules, fallback to step-level
+handleWizardNavigation(req, res, wizardForm, navParams): void
+```
+
+**Form Processing Helpers (`src/controllers/wizardFormHelpers.ts`):**
 
 ```typescript
 // Parse step parameter safely
 parseStepParameter(stepParam: unknown): number
 
-// Determine next step based on conditional logic
+// Evaluate global conditional navigation rules with intelligent prioritization
+evaluateGlobalNavigation(rules, formData, allSteps): string | null
+
+// Determine next step based on step-level conditional logic
 determineNextStep(currentStep, formData): string | null
 
 // Find step index by step ID
@@ -170,11 +247,7 @@ findStepIndexById(steps, stepId): number
 
 // Handle conditional navigation with all logic
 handleConditionalNavigation(params, res): void
-```
 
-**Validation & Rendering:**
-
-```typescript
 // Render step with validation errors
 renderStepWithErrors(params): void
 ```
@@ -202,16 +275,34 @@ export interface FormField {
   name?: string;
   required?: boolean;
   hint?: string;
-  available_options?: string[];
+  hintHtml?: boolean;
+  available_options?: string[] | OptionItem[];
 }
+
+export interface NavigationCondition {
+  stepId: string;      // Step containing the field
+  fieldName: string;   // Name of the field to check
+  value: string;       // Expected value to match
+}
+
+export interface NavigationRule {
+  id: string;                          // Unique identifier for the rule
+  conditions: NavigationCondition[];   // All conditions must match (AND logic)
+  targetStepId: string;               // Step to navigate to if conditions match
+}
+
+export type GlobalConditionalNavigation = NavigationRule[];
 
 export interface WizardStep {
   id: string;
-  title: string;
+  title?: string;
   description?: string;
+  descriptionHtml?: boolean;           // Whether to render description as HTML
+  descriptionClass?: string;           // CSS classes for description element
+  buttonText?: string;                 // Custom button text for termination steps
   fields: FormField[];
-  conditionalNavigation?: ConditionalNavigation;
-  isTerminalStep?: boolean;
+  conditionalNavigation?: ConditionalNavigation;  // Deprecated
+  isTerminationStep?: boolean;         // Step that ends wizard
   isUrgentStep?: boolean;
 }
 
@@ -219,6 +310,7 @@ export interface WizardForm {
   title: string;
   description?: string;
   steps: WizardStep[];
+  globalConditionalNavigation?: GlobalConditionalNavigation;  // Recommended
 }
 ```
 
@@ -227,6 +319,7 @@ export interface WizardForm {
 **Main Template (`views/dynamic-forms/wizard-step.njk`):**
 
 Renders the wizard step with:
+
 - Progress indicator
 - Error summary (if validation fails)
 - Step title and description
@@ -234,13 +327,23 @@ Renders the wizard step with:
 - Navigation buttons (Previous/Next/Submit)
 - Special handling for terminal/urgent steps
 
+**Termination Step Template (`views/dynamic-forms/termination-step.njk`):**
+
+Dedicated template for termination steps with:
+
+- Custom title and description (HTML support)
+- Customizable button text
+- CSRF protection
+- Form POST to success page
+
 **Key Template Variables:**
+
 - `formId` - Form identifier
 - `currentStep` / `totalSteps` - Progress tracking
 - `formConfig` - Array of processed fields
 - `formData` - Current form data from session
 - `error` - Validation errors
-- `isTerminalStep` / `isUrgentStep` - Step flags
+- `isTerminationStep` / `isUrgentStep` - Step flags
 
 #### 6. Form Field Macro (`views/dynamic-forms/macros/form-field.njk`)
 
@@ -265,9 +368,10 @@ Dynamically renders GOV.UK components based on field type:
 ```
 
 **Features:**
+
 - Automatic population from `fieldValue`
 - Error message display from `fieldError`
-- Hint text support
+- Hint text support (including HTML hints)
 - Pre-selection of previously entered values
 - GOV.UK accessibility standards compliance
 
@@ -309,7 +413,8 @@ Dynamically renders GOV.UK components based on field type:
 
 ### Conditional Navigation Example
 
-Given this config:
+Given this step-level config:
+
 ```json
 "conditionalNavigation": {
   "applying_for_other": {
@@ -320,11 +425,46 @@ Given this config:
 ```
 
 **Flow:**
+
 1. User selects "Yes" on "applying_for_other" field
 2. `determineNextStep()` checks field value against navigation map
 3. Finds match: `"Yes" → "representative_details"`
 4. `findStepIndexById()` locates step with id "representative_details"
 5. Redirects to that step instead of sequential next step
+
+### Global Conditional Navigation Example
+
+Given this global config:
+
+```json
+"globalConditionalNavigation": [
+  {
+    "id": "under_18_eligible",
+    "conditions": [
+      {
+        "stepId": "step_client_age",
+        "fieldName": "client_age",
+        "value": "Under 18"
+      },
+      {
+        "stepId": "step_level_of_help",
+        "fieldName": "level_of_help",
+        "value": "civil_certificated_work"
+      }
+    ],
+    "targetStepId": "step_eligibility_confirmed"
+  }
+]
+```
+
+**Flow:**
+
+1. User completes step 1 (client_age: "Under 18")
+2. User completes step 2 (level_of_help: "civil_certificated_work")
+3. `evaluateGlobalNavigation()` checks all rules with consolidated data from steps 1-2
+4. Finds matching rule (all conditions met)
+5. Redirects to "step_eligibility_confirmed" (skipping any intermediate steps)
+6. System automatically prioritizes this rule over less specific rules
 
 ## Session Management
 

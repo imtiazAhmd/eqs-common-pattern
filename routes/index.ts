@@ -11,7 +11,8 @@ import {
 import {
   getFormBuilder,
   saveFormConfig,
-  validateFormConfigEndpoint
+  validateFormConfigEndpoint,
+  saveFormConfigToServer
 } from '#src/controllers/formBuilderController.js';
 import { exampleApiService } from '#src/services/exampleApiService.js';
 
@@ -72,15 +73,17 @@ router.get('/change/person', getPerson);
 
 router.post('/change/person', validatePerson(), postPerson);
 
-// Dynamic Forms routes
+// Dynamic form routes
 router.get('/dynamic-forms', getFormsList);
 router.get('/dynamic-forms/:formId', getDynamicForm);
 router.post('/dynamic-forms/:formId', postDynamicForm);
 router.get('/dynamic-forms/:formId/success', getFormSuccess);
+router.post('/dynamic-forms/:formId/success', getFormSuccess); // Handle POST from termination steps
 
 // Form Builder routes
 router.get('/form-builder', getFormBuilder);
 router.post('/form-builder/save', saveFormConfig);
+router.post('/form-builder/save-to-config', saveFormConfigToServer);
 router.post('/form-builder/validate', validateFormConfigEndpoint);
 
 // Serve config files for loading in form builder
