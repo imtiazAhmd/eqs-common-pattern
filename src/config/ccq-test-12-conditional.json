@@ -1,0 +1,119 @@
+{
+  "title": "Check if your client qualifies for legal aid",
+  "description": "This service tells you if your client is likely to get civil legal aid, based on their financial situation.\n\nIt does not assess the scope or merits of the case.\n\nIt normally takes about 5 minutes to complete.",
+  "steps": [
+    {
+      "id": "step_client_age",
+      "fields": [
+        {
+          "type": "radio",
+          "name": "client_age",
+          "question": "What age is your client?",
+          "hint": "<p class=\"govuk-body\">We need to know this for the check calculations because:</p><ul class=\"govuk-list govuk-list--bullet\"><li class=\"govuk-body\">some clients under 18 may not need a full means test</li><li class=\"govuk-body\">clients aged 60 or over may have some of their capital excluded from a means test</li></ul>",
+          "hintHtml": true,
+          "available_options": [
+            "Under 18",
+            "18 to 59",
+            "60 or over"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "step_level_of_help",
+      "fields": [
+        {
+          "type": "radio",
+          "name": "level_of_help",
+          "question": "What level of help does your client need?",
+          "available_options": [
+            {
+              "value": "civil_controlled_work",
+              "text": "Civil controlled work or family mediation"
+            },
+            {
+              "value": "civil_certificated_work",
+              "text": "Civil certificated or licensed legal work"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "step_simplified_approach",
+      "fields": [
+        {
+          "type": "radio",
+          "name": "simplified_approach",
+          "question": "Is the work controlled legal representation (CLR)?",
+          "hint": "<details class=\"govuk-details\" open=\"\"><summary class=\"govuk-details__summary\"><span class=\"govuk-details__summary-text\">Civil controlled legal representation (CLR)</span></summary><div class=\"govuk-details__text\"><p class=\"govuk-body\">Controlled legal representation (CLR) covers the following, as stated under Regulation 21(2)(e) of the <a href=\"/documents/legislation_cla_2012?assessment_code=abfc19d4-2867-4b2c-9f7f-22f87f3743a4&amp;referrer=under_18_clr\" target=\"_blank\" rel=\"noreferrer noopener\">Civil Legal Aid (Procedure) Regulations 2012</a>:</p><p class=\"govuk-body\">(i) the Health, Education and Social Care Chamber of the First-tier Tribunal under the Mental Health Act 1983 or paragraph 5(2) of the Schedule to the Repatriation of Prisoners Act 1984;</p><p class=\"govuk-body\">(ii) the Mental Health Review Tribunal for Wales; or</p><p class=\"govuk-body\">(iii) the Immigration and Asylum Chamber of the First tier Tribunal.</p></div></details>",
+          "hintHtml": true,
+          "available_options": [
+            "Yes",
+            "No"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "step_early_termination",
+      "isTerminationStep": true,
+      "fields": [
+        {
+          "type": "",
+          "name": "",
+          "question": ""
+        }
+      ],
+      "title": "Your client qualifies for civil legal aid without a means test, for certificated work",
+      "description": "<p class=\"govuk-body\">Your client qualifies for civil legal aid without a means test, based on the information you have entered. Before you (or a provider of advice or services funded by legal aid) proceed with your client’s case, it must also be within scope for legal aid and satisfy the relevant merits criteria set out in the relevant legislation and guidance.</p><p class=\"govuk-body\">You told us your client is under 18. This makes them automatically eligible for civil certificated or licensed legal work without a means test.</p><p class=\"govuk-body\">These calculations were made in line with the latest version of the Lord Chancellor's Guidance on Determining Financial Eligibility for Certificated Work.</p>",
+      "descriptionHtml": true,
+      "buttonText": "Continue"
+    }
+  ],
+  "globalConditionalNavigation": [
+    {
+      "id": "u18_certificated",
+      "conditions": [
+        {
+          "stepId": "step_client_age",
+          "fieldName": "client_age",
+          "value": "Under 18"
+        },
+        {
+          "stepId": "step_level_of_help",
+          "fieldName": "level_of_help",
+          "value": "civil_certificated_work"
+        }
+      ],
+      "targetStepId": "step_early_termination"
+    },
+    {
+      "id": "u18_controlled",
+      "conditions": [
+        {
+          "stepId": "step_client_age",
+          "fieldName": "client_age",
+          "value": "Under 18"
+        },
+        {
+          "stepId": "step_level_of_help",
+          "fieldName": "level_of_help",
+          "value": "civil_controlled_work"
+        }
+      ],
+      "targetStepId": "step_simplified_approach"
+    },
+    {
+      "id": "eligible",
+      "conditions": [
+        {
+          "stepId": "step_simplified_approach",
+          "fieldName": "simplified_approach",
+          "value": "Yes"
+        }
+      ],
+      "targetStepId": "step_early_termination"
+    }
+  ]
+}

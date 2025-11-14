@@ -1,0 +1,43 @@
+{% extends "base.njk" %}
+
+{% from "govuk/components/back-link/macro.njk" import govukBackLink %}
+{% from "govuk/components/button/macro.njk" import govukButton %}
+
+{% block content %}
+  {{ govukBackLink({
+        text: "Back",
+        href: "/dynamic-forms"
+      }) }}
+  <div class="govuk-width-container">
+    <main class="govuk-main-wrapper" id="main-content" role="main">
+      <div class="govuk-grid-row">
+        <div class="govuk-grid-column-two-thirds">
+          
+          {% if stepTitle %}
+            <h1 class="govuk-heading-xl">{{ stepTitle }}</h1>
+          {% endif %}
+
+          {% if stepDescription %}
+            {% if descriptionHtml %}
+              <div class="govuk-body-l {{ descriptionClass if descriptionClass }}">
+                {{ stepDescription | safe }}
+              </div>
+            {% else %}
+              <p class="govuk-body-l {{ descriptionClass if descriptionClass }}">
+                {{ stepDescription }}
+              </p>
+            {% endif %}
+          {% endif %}
+
+          <form method="post" action="/dynamic-forms/{{ formId }}/success">
+            <input type="hidden" name="_csrf" value="{{ csrfToken }}">
+            {{ govukButton({
+              text: buttonText if buttonText else "Return to form list"
+            }) }}
+          </form>
+
+        </div>
+      </div>
+    </main>
+  </div>
+{% endblock %}

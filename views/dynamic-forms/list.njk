@@ -1,6 +1,7 @@
 {% extends "base.njk" %}
 
 {% from "govuk/components/button/macro.njk" import govukButton %}
+{% from "moj/components/interruption-card/macro.njk" import interruptionCard %}
 
 {% block pageTitle %}
   Dynamic Forms - {{ config.SERVICE_NAME }}
@@ -16,29 +17,30 @@
         Choose from our example forms or create your own using JSON configuration.
       </p>
 
-      <h2 class="govuk-heading-l">Example Forms</h2>
-
       {% if availableForms and availableForms.length > 0 %}
         <div class="govuk-grid-row">
           {% for form in availableForms %}
-            <div class="govuk-grid-column-one-half">
-              <div class="govuk-panel govuk-panel--border-only govuk-!-margin-bottom-4">
-                <h3 class="govuk-heading-m">{{ form.title }}</h3>
-                <p class="govuk-body">{{ form.description }}</p>
-                <a href="/dynamic-forms/{{ form.id }}" class="govuk-button govuk-button--secondary" data-module="govuk-button">
-                  View Form
-                </a>
-              </div>
+            <div class="govuk-grid-column">
+              {% call interruptionCard({
+                heading: form.title,
+                primaryAction: {
+                  text: "Continue",
+                  href: "/dynamic-forms/" + form.id
+                },
+                secondaryAction: {
+                  text: "Go back to homepage",
+                  href: "/"
+                }
+                })
+              %}
+                <p>{{ form.description }}</p>
+              {% endcall %}
             </div>
           {% endfor %}
         </div>
       {% else %}
         <p class="govuk-body">No example forms available.</p>
       {% endif %}
-
-      <p class="govuk-body">
-        <a href="/" class="govuk-link">← Back to homepage</a>
-      </p>
 
     </div>
   </div>

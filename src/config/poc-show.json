@@ -1,0 +1,134 @@
+{
+  "title": "Check if your client qualifies for legal aid",
+  "description": "This service tells you if your client is likely to get civil legal aid, based on their financial situation.",
+  "steps": [
+    {
+      "id": "step_client_age",
+      "fields": [
+        {
+          "type": "radio",
+          "name": "client_age",
+          "question": "What age is your client?",
+          "hint": "We need to know this for the check calculations because:  some clients under 18 may not need a full means test clients aged 60 or over may have some of their capital excluded from a means test",
+          "available_options": [
+            "Under 18",
+            "18 to 59",
+            "60 or over"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "step_level_of_work",
+      "fields": [
+        {
+          "type": "radio",
+          "name": "level_of_work",
+          "question": "What level of help does your client need?",
+          "available_options": [
+            {
+              "value": "civil_controlled_work",
+              "text": "Civil controlled work or family mediation"
+            },
+            {
+              "value": "civil_certificated_work",
+              "text": "Civil certificated or licensed legal work"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "step_simplified",
+      "fields": [
+        {
+          "type": "radio",
+          "name": "siplified_answer",
+          "question": "Is the work controlled legal representation (CLR)?",
+          "available_options": [
+            "Yes",
+            "No"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "step_api",
+      "fields": [
+        {
+          "type": "checkboxes",
+          "name": "user_name",
+          "question": "What is the username ?",
+          "useApiOptions": true,
+          "apiConfig": {
+            "endpoint": "/api",
+            "params": "results=4",
+            "dataPath": "results",
+            "valuePath": "email",
+            "labelPath": "name.first"
+          }
+        }
+      ]
+    },
+    {
+      "id": "step_termination",
+      "isTerminationStep": true,
+      "fields": [
+        {
+          "type": "",
+          "name": "",
+          "question": ""
+        }
+      ],
+      "title": "Your client qualifies for civil legal aid without a means test, for controlled legal representation",
+      "description": "To apply for legal aid for your client you must complete a controlled work form and keep it for your records, with any evidence provided by your client. Your client’s file may be audited and assessed by the LAA at a later date.",
+      "descriptionHtml": true,
+      "buttonText": "Continue"
+    }
+  ],
+  "globalConditionalNavigation": [
+    {
+      "id": "u18_certificated",
+      "conditions": [
+        {
+          "stepId": "step_client_age",
+          "fieldName": "client_age",
+          "value": "Under 18"
+        },
+        {
+          "stepId": "step_level_of_work",
+          "fieldName": "level_of_work",
+          "value": "civil_certificated_work"
+        }
+      ],
+      "targetStepId": "step_termination"
+    },
+    {
+      "id": "u18_controlled",
+      "conditions": [
+        {
+          "stepId": "step_client_age",
+          "fieldName": "client_age",
+          "value": "Under 18"
+        },
+        {
+          "stepId": "step_level_of_work",
+          "fieldName": "level_of_work",
+          "value": "civil_controlled_work"
+        }
+      ],
+      "targetStepId": "step_simplified"
+    },
+    {
+      "id": "logic_simplified",
+      "conditions": [
+        {
+          "stepId": "step_simplified",
+          "fieldName": "siplified_answer",
+          "value": "Yes"
+        }
+      ],
+      "targetStepId": "step_termination"
+    }
+  ]
+}

@@ -5,7 +5,7 @@
 
 import type { Request, Response, NextFunction } from 'express';
 import type { FormBuilderResult } from '../types/form-builder-types.js';
-import { writeFileSync, existsSync, readdirSync } from 'node:fs';
+import { writeFileSync, existsSync, readdirSync, mkdirSync } from 'node:fs';
 import { join } from 'node:path';
 import { isRecord, hasProperty } from '../helpers/dataTransformers.js';
 
@@ -23,6 +23,7 @@ const HTTP_STATUS_INTERNAL_ERROR = 500;
 const MIN_STEPS_REQUIRED = 0;
 const STEP_INDEX_OFFSET = 1;
 const JSON_INDENT_SPACES = 2;
+const JSON_EXTENSION_LENGTH = 5; // Length of '.json'
 
 // Config directory path
 const CONFIG_DIR = join(process.cwd(), 'src', 'config');
@@ -112,12 +113,16 @@ function validateApiConfig(field: Record<string, unknown>, stepNum: number, fiel
  * @param {string[]} errors - Array to collect errors
  */
 function validateFieldBasicProps(field: Record<string, unknown>, stepNum: number, fieldNum: number, errors: string[]): void {
+  // Skip validation if field has no type (empty field placeholder in termination steps)
+  const hasType = hasProperty(field, 'type') && typeof field.type === 'string' && field.type.trim() !== '';
+  
+  if (!hasType) {
+    // Empty field - skip validation
+    return;
+  }
+  
   if (!hasProperty(field, 'question') || typeof field.question !== 'string' || field.question.trim() === '') {
     errors.push(`Step ${stepNum}, Field ${fieldNum}: question is required`);
-  }
-
-  if (!hasProperty(field, 'type') || typeof field.type !== 'string') {
-    errors.push(`Step ${stepNum}, Field ${fieldNum}: type is required`);
   }
 
   if (!hasProperty(field, 'name') || typeof field.name !== 'string' || field.name.trim() === '') {
@@ -185,7 +190,6 @@ function validateStep(step: unknown, index: number, stepIds: Set<string>, errors
   }
 
   validateStepId(step, stepNum, stepIds, errors);
-  validateStepTitle(step, stepNum, errors);
   validateStepFields(step, stepNum, errors);
   validateConditionalNavigation(step, stepNum, errors);
 }
@@ -204,18 +208,6 @@ function validateStepId(step: Record<string, unknown>, stepNum: number, stepIds:
     errors.push(`Step ${stepNum}: duplicate step ID "${step.id}"`);
   } else {
     stepIds.add(step.id);
-  }
-}
-
-/**
- * Validate step title
- * @param {Record<string, unknown>} step - Step object
- * @param {number} stepNum - Step number for error messages
- * @param {string[]} errors - Array to collect errors
- */
-function validateStepTitle(step: Record<string, unknown>, stepNum: number, errors: string[]): void {
-  if (!hasProperty(step, 'title') || typeof step.title !== 'string' || step.title.trim() === '') {
-    errors.push(`Step ${stepNum}: title is required`);
   }
 }
 
@@ -546,3 +538,123 @@ export function validateFormConfigEndpoint(req: RequestWithCSRF, res: Response, 
     next(error);
   }
 }
+
+/**
+ * Validate and sanitize filename for saving to config folder
+ * @param {unknown} filename - Filename to validate
+ * @returns {string | null} Sanitized filename or null if invalid
+ */
+function validateAndSanitizeFilename(filename: unknown): string | null {
+  if (typeof filename !== 'string' || filename.trim() === '') {
+    return null;
+  }
+  
+  // Remove .json extension if already present
+  let cleanFilename = filename.trim();
+  if (cleanFilename.endsWith('.json')) {
+    cleanFilename = cleanFilename.slice(MIN_STEPS_REQUIRED, -JSON_EXTENSION_LENGTH);
+  }
+  
+  // Sanitize filename (allow only alphanumeric, hyphens, underscores)
+  const sanitized = cleanFilename.replace(/[^a-zA-Z0-9_-]/g, '');
+  
+  // Add .json extension
+  return sanitized + '.json';
+}
+
+/**
+ * Save form configuration to src/config folder
+ * @param {RequestWithCSRF} req - Express request with form config data
+ * @param {Response} res - Express response
+ * @param {NextFunction} next - Express next function
+ */
+export function saveFormConfigToServer(req: RequestWithCSRF, res: Response, next: NextFunction): void {
+  try {
+    // Validate request body structure
+    if (!isRecord(req.body)) {
+      console.log('saveFormConfigToServer: Invalid request body - not a record');
+      res.status(HTTP_STATUS_BAD_REQUEST).json({
+        success: false,
+        message: 'Invalid request body'
+      });
+      return;
+    }
+    
+    console.log('saveFormConfigToServer: Request body keys:', Object.keys(req.body));
+    
+    if (!hasProperty(req.body, 'filename') || !hasProperty(req.body, 'config')) {
+      console.log('saveFormConfigToServer: Missing required fields', {
+        hasFilename: hasProperty(req.body, 'filename'),
+        hasConfig: hasProperty(req.body, 'config')
+      });
+      res.status(HTTP_STATUS_BAD_REQUEST).json({
+        success: false,
+        message: 'Missing filename or config field'
+      });
+      return;
+    }
+
+    // Extract and validate filename
+    const requestBody = isRecord(req.body) ? req.body : {};
+    const { filename, config: configValue } = requestBody;
+    
+    console.log('saveFormConfigToServer: Received filename:', filename);
+    
+    const sanitizedFilename = validateAndSanitizeFilename(filename);
+    if (sanitizedFilename === null) {
+      console.log('saveFormConfigToServer: Filename validation failed');
+      res.status(HTTP_STATUS_BAD_REQUEST).json({
+        success: false,
+        message: 'Invalid filename'
+      });
+      return;
+    }
+    
+    console.log('saveFormConfigToServer: Sanitized filename:', sanitizedFilename);
+    
+    // Parse and validate form config
+    const parsedConfig = parseFormConfig(configValue);
+    if (parsedConfig === null) {
+      console.log('saveFormConfigToServer: JSON parsing failed');
+      res.status(HTTP_STATUS_BAD_REQUEST).json({
+        success: false,
+        message: 'Invalid JSON format',
+        errors: ['JSON parsing failed']
+      });
+      return;
+    }
+
+    // Validate the configuration
+    const { valid, errors } = validateFormConfig(parsedConfig);
+    if (!valid) {
+      console.log('saveFormConfigToServer: Form validation failed:', errors);
+      res.status(HTTP_STATUS_BAD_REQUEST).json({
+        success: false,
+        message: 'Form configuration validation failed',
+        errors
+      });
+      return;
+    }
+
+    // Write to src/config folder
+    const configDir = join(process.cwd(), 'src', 'config');
+    const filePath = join(configDir, sanitizedFilename);
+
+    // Ensure config directory exists
+    if (!existsSync(configDir)) {
+      mkdirSync(configDir, { recursive: true });
+    }
+
+    // Write file
+    writeFileSync(filePath, JSON.stringify(parsedConfig, null, JSON_INDENT_SPACES), 'utf8');
+
+    res.status(HTTP_STATUS_OK).json({
+      success: true,
+      message: `Configuration saved successfully to src/config/${sanitizedFilename}`,
+      filename: sanitizedFilename
+    });
+  } catch (error) {
+    next(error);
+  }
+}
+

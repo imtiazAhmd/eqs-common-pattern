@@ -14,6 +14,11 @@
           </a>
         </li>
         <li class="govuk-tabs__list-item">
+          <a class="govuk-tabs__tab" href="#navigation">
+            Navigation Rules
+          </a>
+        </li>
+        <li class="govuk-tabs__list-item">
           <a class="govuk-tabs__tab" href="#preview">
             JSON Preview
           </a>
@@ -60,17 +65,47 @@
 
           <!-- Action Buttons -->
           <div class="govuk-button-group">
-            <button type="button" class="govuk-button" id="validate-btn">
-              Validate Configuration
-            </button>
-            <button type="button" class="govuk-button govuk-button--secondary" id="save-btn">
-              Save to File
+            <button type="button" class="govuk-button" id="set-nav-rules-btn">
+              Set Navigation Rules
             </button>
           </div>
         </form>
 
         <!-- Validation Results -->
         <div id="validation-results" class="govuk-!-margin-top-6" style="display: none;"></div>
+      </div>
+
+      <!-- Navigation Rules Tab -->
+      <div class="govuk-tabs__panel govuk-tabs__panel--hidden" id="navigation">
+        <h2 class="govuk-heading-l">Global Conditional Navigation</h2>
+        
+        <div class="govuk-inset-text">
+          <p>Configure cross-step navigation rules. When all conditions in a rule match, the user will navigate to the specified target step.</p>
+          <p class="govuk-body-s"><strong>How it works:</strong> All conditions within a rule must match (AND logic). The first matching rule is used.</p>
+        </div>
+
+        <div id="global-nav-rules-container">
+          <!-- Validation Results for Navigation -->
+          <div id="nav-validation-results" class="govuk-!-margin-bottom-6" style="display: none;"></div>
+
+          <div id="global-nav-rules-list"></div>
+          
+          <button type="button" class="govuk-button govuk-button--secondary" id="add-global-nav-rule-btn">
+            Add Navigation Rule
+          </button>
+          
+          <button type="button" class="govuk-button govuk-button--secondary" id="validate-navigation-btn">
+            Validate Navigation Rules
+          </button>
+        </div>
+
+        <div class="govuk-warning-text" id="navigation-warnings" style="display: none;">
+          <span class="govuk-warning-text__icon" aria-hidden="true">!</span>
+          <strong class="govuk-warning-text__text">
+            <span class="govuk-visually-hidden">Warning</span>
+            <pre id="navigation-warning-message" style="white-space: pre-wrap; font-family: inherit;"></pre>
+          </strong>
+        </div>
       </div>
 
       <!-- JSON Preview Tab -->
@@ -99,10 +134,15 @@
           <div class="govuk-hint">
             Use lowercase letters, numbers, hyphens, and underscores only
           </div>
+          <div style="display: flex;">
           <input class="govuk-input govuk-!-width-one-half" id="export-filename" name="exportFilename" type="text" placeholder="my-form">
-          <button type="button" class="govuk-button govuk-!-margin-left-2" id="download-json-btn">
+          <button type="button" class="govuk-button govuk-!-margin-left-2" id="save-to-server-btn">
+            Save to Server
+          </button>
+          <button type="button" class="govuk-button govuk-button--secondary govuk-!-margin-left-2" id="download-json-btn">
             Download JSON
           </button>
+          </div>
         </div>
 
         <hr class="govuk-section-break govuk-section-break--m govuk-section-break--visible">
@@ -184,58 +224,76 @@
           <input class="govuk-input step-id" type="text" required>
         </div>
 
-        <div class="govuk-form-group">
-          <label class="govuk-label" for="">Step Title</label>
-          <input class="govuk-input step-title" type="text" required>
-        </div>
-
-        <div class="govuk-form-group">
-          <label class="govuk-label" for="">Step Description</label>
-          <textarea class="govuk-textarea step-description" rows="2"></textarea>
-        </div>
-
-        <div class="govuk-checkboxes govuk-checkboxes--small">
+        <div class="govuk-checkboxes govuk-checkboxes--small govuk-!-margin-bottom-4">
           <div class="govuk-checkboxes__item">
-            <input class="govuk-checkboxes__input step-is-terminal" type="checkbox">
+            <input class="govuk-checkboxes__input step-is-termination" type="checkbox">
             <label class="govuk-label govuk-checkboxes__label">
-              Terminal Step (ends wizard early)
-            </label>
-          </div>
-          <div class="govuk-checkboxes__item">
-            <input class="govuk-checkboxes__input step-is-urgent" type="checkbox">
-            <label class="govuk-label govuk-checkboxes__label">
-              Urgent Step (requires immediate attention)
+              This is a termination step
             </label>
           </div>
         </div>
 
-        <hr class="govuk-section-break govuk-section-break--m govuk-section-break--visible">
-
-        <h3 class="govuk-heading-m">Fields</h3>
-        <div class="fields-list"></div>
-        <button type="button" class="govuk-button govuk-button--secondary govuk-button--small add-field-btn">
-          Add Field
-        </button>
-
-        <hr class="govuk-section-break govuk-section-break--m govuk-section-break--visible">
-
-        <details class="govuk-details">
-          <summary class="govuk-details__summary">
-            <span class="govuk-details__summary-text">
-              Conditional Navigation (Optional)
-            </span>
-          </summary>
-          <div class="govuk-details__text">
-            <p class="govuk-body-s">Define step routing based on user answers. Leave empty for sequential navigation.</p>
-            
-            <div class="conditional-navigation-list"></div>
-            
-            <button type="button" class="govuk-button govuk-button--secondary govuk-button--small add-conditional-nav-btn">
-              Add Conditional Rule
-            </button>
+        <div class="termination-step-config" style="display: none;">
+          <div class="govuk-form-group">
+            <label class="govuk-label" for="">Termination Step Title</label>
+            <input class="govuk-input step-title" type="text">
           </div>
-        </details>
-</div>
+
+          <div class="govuk-form-group">
+            <label class="govuk-label" for="">Description</label>
+            <textarea class="govuk-textarea step-description" rows="3"></textarea>
+          </div>
+
+          <div class="govuk-checkboxes govuk-checkboxes--small govuk-!-margin-bottom-2">
+            <div class="govuk-checkboxes__item">
+              <input class="govuk-checkboxes__input step-description-html" type="checkbox">
+              <label class="govuk-label govuk-checkboxes__label">
+                Render description as HTML
+              </label>
+            </div>
+          </div>
+
+          <div class="govuk-form-group">
+            <label class="govuk-label" for="">Description CSS Class (optional)</label>
+            <input class="govuk-input step-description-class" type="text" placeholder="govuk-!-font-weight-bold">
+          </div>
+
+          <div class="govuk-form-group">
+            <label class="govuk-label" for="">Button Text</label>
+            <div class="govuk-hint">Default: "Return to form list"</div>
+            <input class="govuk-input step-button-text" type="text" placeholder="Return to form list">
+          </div>
+
+          <hr class="govuk-section-break govuk-section-break--m govuk-section-break--visible">
+        </div>
+
+        <div class="regular-step-content">
+          <h3 class="govuk-heading-m">Fields</h3>
+          <div class="fields-list"></div>
+          <button type="button" class="govuk-button govuk-button--secondary govuk-button--small add-field-btn">
+            Add Field
+          </button>
+
+          <hr class="govuk-section-break govuk-section-break--m govuk-section-break--visible">
+
+          <details class="govuk-details">
+            <summary class="govuk-details__summary">
+              <span class="govuk-details__summary-text">
+                Conditional Navigation (Optional)
+              </span>
+            </summary>
+            <div class="govuk-details__text">
+              <p class="govuk-body-s">Define step routing based on user answers. Leave empty for sequential navigation.</p>
+              
+              <div class="conditional-navigation-list"></div>
+              
+              <button type="button" class="govuk-button govuk-button--secondary govuk-button--small add-conditional-nav-btn">
+                Add Conditional Rule
+              </button>
+            </div>
+          </details>
+        </div>
+      </div>
     </div>
   </div>
 </template>
@@ -288,6 +346,20 @@
           <input class="govuk-input field-hint" type="text">
         </div>
 
+        <div class="govuk-checkboxes govuk-checkboxes--small govuk-!-margin-bottom-2">
+          <div class="govuk-checkboxes__item">
+            <input class="govuk-checkboxes__input field-hint-html" type="checkbox">
+            <label class="govuk-label govuk-checkboxes__label">
+              Render hint as HTML
+            </label>
+          </div>
+        </div>
+
+        <div class="govuk-form-group">
+          <label class="govuk-label govuk-label--s">Hint CSS Class (optional)</label>
+          <input class="govuk-input field-hint-class" type="text" placeholder="govuk-hint--compact">
+        </div>
+
         <div class="govuk-checkboxes govuk-checkboxes--small">
           <div class="govuk-checkboxes__item">
             <input class="govuk-checkboxes__input field-required" type="checkbox">
@@ -298,8 +370,29 @@
         </div>
 
         <div class="govuk-form-group field-options-group" style="display: none;">
-          <label class="govuk-label govuk-label--s">Options (one per line)</label>
-          <textarea class="govuk-textarea field-options" rows="4"></textarea>
+          <label class="govuk-label govuk-label--s">Options</label>
+          
+          <div class="govuk-checkboxes govuk-checkboxes--small govuk-!-margin-bottom-2">
+            <div class="govuk-checkboxes__item">
+              <input class="govuk-checkboxes__input field-use-custom-values" type="checkbox">
+              <label class="govuk-label govuk-checkboxes__label">
+                Use custom values (specify different value and display text)
+              </label>
+            </div>
+          </div>
+
+          <div class="field-simple-options" style="display: block;">
+            <div class="govuk-hint">One option per line (e.g., Yes, No, Maybe)</div>
+            <textarea class="govuk-textarea field-options" rows="4"></textarea>
+          </div>
+
+          <div class="field-custom-options" style="display: none;">
+            <div class="govuk-hint">Add options with custom values and display text</div>
+            <div class="custom-options-list"></div>
+            <button type="button" class="govuk-button govuk-button--secondary govuk-button--small add-custom-option-btn">
+              Add Option
+            </button>
+          </div>
         </div>
 
         <div class="govuk-form-group field-api-options-group" style="display: none;">
@@ -371,6 +464,98 @@
       Remove Rule
     </button>
     
+    <hr class="govuk-section-break govuk-section-break--m">
+  </div>
+</template>
+
+<!-- Custom Option Template (Hidden) -->
+<template id="custom-option-template">
+  <div class="custom-option-item govuk-!-margin-bottom-3" data-option-index="">
+    <div class="govuk-form-group">
+      <label class="govuk-label govuk-label--s">Display Text</label>
+      <input class="govuk-input option-text" type="text" placeholder="e.g., Criminal Law">
+    </div>
+    
+    <div class="govuk-form-group">
+      <label class="govuk-label govuk-label--s">Value</label>
+      <div class="govuk-hint">Auto-generated from text, or enter custom value</div>
+      <input class="govuk-input option-value" type="text" placeholder="e.g., criminal_law">
+    </div>
+    
+    <button type="button" class="govuk-button govuk-button--warning govuk-button--small delete-custom-option">
+      Remove Option
+    </button>
+    
+    <hr class="govuk-section-break govuk-section-break--m">
+  </div>
+</template>
+
+<!-- Global Navigation Rule Template (Hidden) -->
+<template id="global-nav-rule-template">
+  <div class="global-nav-rule govuk-!-margin-bottom-6" data-rule-index="">
+    <div class="govuk-summary-card">
+      <div class="govuk-summary-card__title-wrapper">
+        <h3 class="govuk-summary-card__title">Rule <span class="rule-number"></span></h3>
+        <ul class="govuk-summary-card__actions">
+          <li class="govuk-summary-card__action">
+            <a class="delete-global-nav-rule" href="#" role="button">Delete</a>
+          </li>
+        </ul>
+      </div>
+      <div class="govuk-summary-card__content">
+        <div class="govuk-form-group">
+          <label class="govuk-label govuk-label--s">Rule ID</label>
+          <div class="govuk-hint">Unique identifier (e.g., urgent_criminal_case)</div>
+          <input class="govuk-input global-nav-rule-id" type="text" required>
+        </div>
+
+        <h4 class="govuk-heading-s">Conditions (all must match)</h4>
+        <div class="global-nav-conditions-list"></div>
+        
+        <button type="button" class="govuk-button govuk-button--secondary govuk-button--small add-global-nav-condition-btn">
+          Add Condition
+        </button>
+
+        <hr class="govuk-section-break govuk-section-break--m govuk-section-break--visible">
+
+        <div class="govuk-form-group">
+          <label class="govuk-label govuk-label--s">Target Step ID</label>
+          <div class="govuk-hint">Step to navigate to when all conditions match</div>
+          <select class="govuk-select global-nav-target-step" required>
+            <option value="">Select target step...</option>
+          </select>
+        </div>
+      </div>
+    </div>
+  </div>
+</template>
+
+<!-- Global Navigation Condition Template (Hidden) -->
+<template id="global-nav-condition-template">
+  <div class="global-nav-condition govuk-!-margin-bottom-4" data-condition-index="">
+    <div class="govuk-form-group">
+      <label class="govuk-label govuk-label--s">Step</label>
+      <select class="govuk-select condition-step-id" required>
+        <option value="">Select step...</option>
+      </select>
+    </div>
+
+    <div class="govuk-form-group">
+      <label class="govuk-label govuk-label--s">Field</label>
+      <select class="govuk-select condition-field-name" required disabled>
+        <option value="">Select step first...</option>
+      </select>
+    </div>
+
+    <div class="govuk-form-group">
+      <label class="govuk-label govuk-label--s">Value</label>
+      <input class="govuk-input condition-value" type="text" placeholder="Expected value" required>
+    </div>
+
+    <button type="button" class="govuk-button govuk-button--warning govuk-button--small delete-global-nav-condition">
+      Remove Condition
+    </button>
+
     <hr class="govuk-section-break govuk-section-break--m">
   </div>
 </template>
